@@ -5,7 +5,6 @@ package impl
 
 import java.util
 import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.atomic.AtomicLong
 
 import com.intellij.ProjectTopics
 import com.intellij.ide.highlighter.JavaFileType
@@ -13,12 +12,11 @@ import com.intellij.openapi.components.AbstractProjectComponent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.{DumbService, Project, ProjectUtil}
 import com.intellij.openapi.roots.{ModuleRootEvent, ModuleRootListener}
-import com.intellij.openapi.util.{Key, LowMemoryWatcher, ModificationTracker, SimpleModificationTracker}
+import com.intellij.openapi.util.{Key, LowMemoryWatcher, SimpleModificationTracker}
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi._
 import com.intellij.psi.impl.{JavaPsiFacadeImpl, PsiTreeChangeEventImpl}
 import com.intellij.psi.search.{DelegatingGlobalSearchScope, GlobalSearchScope, PsiShortNamesCache}
-import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ArrayUtil
 import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.annotations.TestOnly
@@ -312,7 +310,7 @@ class ScalaPsiManager(val project: Project) {
 
   object CacheInvalidator extends PsiTreeChangeAdapter {
     @volatile
-    private var javaStructureModCount: Long = 0L
+    private var lastJavaStructureModCount: Long = 0L
 
     private def fromIdeaInternalFile(event: PsiTreeChangeEvent) = {
       val virtFile = event.getFile match {
@@ -336,9 +334,9 @@ class ScalaPsiManager(val project: Project) {
 
       CachesUtil.updateModificationCount(event.getParent)
       clearOnChange()
-      val count = PsiModificationTracker.SERVICE.getInstance(project).getJavaStructureModificationCount
-      if (javaStructureModCount != count) {
-        javaStructureModCount = count
+      val count = CachesUtil.javaStructureTracker(project).getModificationCount
+      if (lastJavaStructureModCount != count) {
+        lastJavaStructureModCount = count
         clearOnJavaStructureChange()
       }
     }
@@ -355,12 +353,6 @@ class ScalaPsiManager(val project: Project) {
 
     override def propertyChanged(event: PsiTreeChangeEvent): Unit = onPsiChange(event)
   }
-
-  val modificationTracker: ScalaPsiModificationTracker = new ScalaPsiModificationTracker(project)
-
-  def getModificationCount: Long = modificationTracker.getModificationCount
-
-  def incModificationCount(): Long = modificationTracker.incModificationCount()
 
   def clearAllCaches(): Unit = {
     clearOnChange()
@@ -424,17 +416,4 @@ class ScalaPsiManagerComponent(project: Project) extends AbstractProjectComponen
   override def disposeComponent(): Unit = {
     manager = null
   }
-}
-
-class ScalaPsiModificationTracker(project: Project) extends ModificationTracker {
-
-  private val myRawModificationCount = new AtomicLong(0)
-
-  private val mainModificationTracker = PsiManager.getInstance(project).getModificationTracker
-
-  def getModificationCount: Long = {
-    myRawModificationCount.get() + mainModificationTracker.getJavaStructureModificationCount
-  }
-
-  def incModificationCount(): Long = myRawModificationCount.incrementAndGet()
 }

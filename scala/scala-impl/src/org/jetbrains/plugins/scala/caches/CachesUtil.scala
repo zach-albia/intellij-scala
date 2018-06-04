@@ -5,6 +5,7 @@ package caches
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicReference
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util._
 import com.intellij.psi._
@@ -18,7 +19,6 @@ import org.jetbrains.plugins.scala.lang.psi.api.expr.ScModificationTrackerOwner
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.jetbrains.plugins.scala.lang.psi.impl.ScPackageImpl.{DoNotProcessPackageObjectException, isPackageObjectProcessing}
-import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiManager
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
 
@@ -94,7 +94,7 @@ object CachesUtil {
     @tailrec
     def calc(element: PsiElement): ModificationTracker = {
       PsiTreeUtil.getContextOfType(element, false, classOf[ScModificationTrackerOwner]) match {
-        case null => ScalaPsiManager.instance(elem.getProject).modificationTracker
+        case null => javaStructureTracker(elem.getProject)
         case owner@ScModificationTrackerOwner() =>
           new ModificationTracker {
             override def getModificationCount: Long = owner.modificationCount
@@ -107,14 +107,16 @@ object CachesUtil {
   }
 
   @tailrec
-  def updateModificationCount(elem: PsiElement, incModCountOnTopLevel: Boolean = false): Unit =
+  def updateModificationCount(elem: PsiElement): Unit =
     Option(PsiTreeUtil.getContextOfType(elem, false, classOf[ScModificationTrackerOwner], classOf[ScalaCodeFragment])) match {
       case Some(_: ScalaCodeFragment) => //do not update on changes in dummy file
       case Some(owner@ScModificationTrackerOwner()) => owner.incModificationCount()
       case Some(owner) => updateModificationCount(owner.getContext)
-      case _ if incModCountOnTopLevel => ScalaPsiManager.instance(elem.getProject).incModificationCount()
       case _ =>
     }
+
+  def javaStructureTracker(project: Project): ModificationTracker =
+    PsiManager.getInstance(project).getModificationTracker.getJavaStructureModificationTracker
 
   case class ProbablyRecursionException[Data](elem: PsiElement,
                                               data: Data,

@@ -3,10 +3,11 @@ package org.jetbrains.plugins.scala.lang.psi.api.expr
 import java.util.concurrent.atomic.AtomicLong
 
 import com.intellij.psi.{PsiElement, PsiModifiableCodeBlock}
+import org.jetbrains.plugins.scala.caches.CachesUtil
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiElement
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaFile
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScValueOrVariable}
-import org.jetbrains.plugins.scala.lang.psi.impl.{ScalaPsiElementFactory, ScalaPsiManager}
+import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
 import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
 import org.jetbrains.plugins.scala.project.ProjectContext
 
@@ -61,7 +62,7 @@ object ScModificationTrackerOwner {
   @tailrec
   private def modificationCount(place: PsiElement, result: Long = 0)
                                (implicit context: ProjectContext): Long = place match {
-    case null | _: ScalaFile => result + ScalaPsiManager.instance(context).getModificationCount
+    case null | _: ScalaFile => result + CachesUtil.javaStructureTracker(context.project).getModificationCount
     case _ =>
       val delta = place match {
         case owner@ScModificationTrackerOwner() => owner.blockModificationCount.get()
