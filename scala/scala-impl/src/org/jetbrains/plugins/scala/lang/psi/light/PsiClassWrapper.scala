@@ -1,7 +1,6 @@
 package org.jetbrains.plugins.scala.lang.psi.light
 
 import java.util
-import javax.swing._
 
 import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.util.text.StringUtil
@@ -16,6 +15,8 @@ import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.scope.processor.MethodsProcessor
 import com.intellij.psi.search.{GlobalSearchScope, SearchScope}
 import com.intellij.psi.util.PsiUtil
+import javax.swing._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.adapters.PsiClassAdapter
@@ -25,7 +26,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObj
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.TypeDefinitionMembers
 import org.jetbrains.plugins.scala.lang.psi.light.PsiTypedDefinitionWrapper.DefinitionRole._
 import org.jetbrains.plugins.scala.lang.resolve.processor.BaseProcessor
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import _root_.scala.collection.mutable.ArrayBuffer
 
@@ -121,7 +122,7 @@ class PsiClassWrapper(val definition: ScTemplateDefinition,
     }
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   private def getEmptyConstructor: PsiMethod = new EmptyPrivateConstructor(this)
 
   def getConstructors: Array[PsiMethod] = {

@@ -10,6 +10,7 @@ import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.{PsiElement, ResolveState}
 import org.jetbrains.plugins.scala.JavaArrayFactoryUtil._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.TokenSets._
 import org.jetbrains.plugins.scala.lang.parser.ScalaElementTypes.{SELF_TYPE, TEMPLATE_BODY}
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.ScSelfTypeElement
@@ -18,7 +19,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScDeclaredElementsHo
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScMember, ScTemplateDefinition, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScTemplateBodyStub
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 /**
 * @author Alexander Podkhalyuzin
@@ -58,7 +59,7 @@ class ScTemplateBodyImpl private (stub: ScTemplateBodyStub, node: ASTNode)
   def exprs: Seq[ScExpression] =
     getStubOrPsiChildren(EXPRESSION_SET, ScExpressionFactory).toSeq
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def selfTypeElement: Option[ScSelfTypeElement] =
     Option(getStubOrPsiChild(SELF_TYPE))
 

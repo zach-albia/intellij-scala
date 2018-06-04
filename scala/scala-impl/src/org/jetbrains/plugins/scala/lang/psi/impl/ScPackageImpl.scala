@@ -7,7 +7,7 @@ import com.intellij.psi.impl.file.PsiPackageImpl
 import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.plugins.scala.ScalaLanguage
-import org.jetbrains.plugins.scala.caches.{CachesUtil, ScalaShortNamesCacheManager}
+import org.jetbrains.plugins.scala.caches.{CachesUtil, ScalaShortNamesCacheManager, Tracker}
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScObject, ScTypeDefinition}
@@ -97,7 +97,7 @@ class ScPackageImpl private (val pack: PsiPackage) extends PsiPackageImpl(pack.g
     val manager = ScalaShortNamesCacheManager.getInstance(getProject)
 
     var tuple = pack.getUserData(CachesUtil.PACKAGE_OBJECT_KEY)
-    val count = CachesUtil.javaStructureTracker(pack.getProject).getModificationCount
+    val count = Tracker.globalStructureChange(pack.getProject).getModificationCount
     if (tuple == null || tuple._2.longValue != count) {
       val clazz = manager.getPackageObjectByName(getQualifiedName, scope)
       tuple = (clazz, java.lang.Long.valueOf(count)) // TODO is it safe to cache this ignoring `scope`?

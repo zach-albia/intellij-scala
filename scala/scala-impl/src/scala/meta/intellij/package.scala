@@ -1,9 +1,7 @@
 package scala.meta
 
-import scala.collection.Seq
-
 import com.intellij.openapi.project.DumbService
-import com.intellij.psi.ResolveResult
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.PsiElementExt
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiElement
@@ -15,8 +13,10 @@ import org.jetbrains.plugins.scala.lang.psi.impl.base.ScStableCodeReferenceEleme
 import org.jetbrains.plugins.scala.lang.psi.stubs.elements.ScStubElementType
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
 import org.jetbrains.plugins.scala.lang.resolve.processor.ResolveProcessor
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedInUserData, CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{CachedInUserData, CachedWithRecursionGuard}
 import org.jetbrains.plugins.scala.settings.ScalaProjectSettings
+
+import scala.collection.Seq
 
 package object intellij {
   object psiExt {
@@ -40,7 +40,7 @@ package object intellij {
         if (!metaEnabled(annotation))
           return false
 
-        @CachedInUserData(annotation, ModCount.getBlockModificationCount)
+        @CachedInUserData(annotation, DropOn.semanticChange(annotation))
         def cached: Boolean = {
           annotation.constructor.reference.exists {
             case stRef: ScStableCodeReferenceElementImpl =>
@@ -57,7 +57,7 @@ package object intellij {
     implicit class AnnotHolderExt(val ah: ScAnnotationsHolder) extends AnyVal {
       def getMetaExpansion: Either[String, scala.meta.Tree] = {
 
-        @CachedWithRecursionGuard(ah, Left("Recursive meta expansion"), ModCount.getBlockModificationCount)
+        @CachedWithRecursionGuard(ah, Left("Recursive meta expansion"), DropOn.semanticChange(ah))
         def getMetaExpansionCached: Either[String, Tree] = {
           import ScalaProjectSettings.ScalaMetaMode
           if (ScalaProjectSettings.getInstance(ah.getProject).getScalaMetaMode == ScalaMetaMode.Enabled) {

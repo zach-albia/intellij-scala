@@ -8,6 +8,7 @@ package types
 import com.intellij.lang.ASTNode
 import com.intellij.psi._
 import com.intellij.util.IncorrectOperationException
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaElementVisitor
@@ -18,7 +19,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.designator.{ScDesignatorTy
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve._
 import org.jetbrains.plugins.scala.lang.resolve.processor.{BaseProcessor, CompletionProcessor, ResolveProcessor}
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 
 /**
 * @author Alexander Podkhalyuzin
@@ -38,7 +39,7 @@ class ScTypeProjectionImpl(node: ASTNode) extends ScReferenceElementImpl(node) w
 
   def getKinds(incomplete: Boolean, completion: Boolean): ResolveTargets.ValueSet = StdKinds.stableClass
 
-  @CachedWithRecursionGuard(this, ScalaResolveResult.EMPTY_ARRAY, ModCount.getBlockModificationCount)
+  @CachedWithRecursionGuard(this, ScalaResolveResult.EMPTY_ARRAY, DropOn.semanticChange(this))
   def multiResolveScala(incomplete: Boolean): Array[ScalaResolveResult] =
     doResolve(new ResolveProcessor(getKinds(incomplete), ScTypeProjectionImpl.this, refName))
 

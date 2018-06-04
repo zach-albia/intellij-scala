@@ -4,6 +4,7 @@ package psi
 package api
 package base
 
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef._
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
@@ -13,7 +14,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.TypeParameterType
 import org.jetbrains.plugins.scala.lang.psi.types.api.designator._
 import org.jetbrains.plugins.scala.lang.psi.types.nonvalue.ScMethodType
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaNamesUtil
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 
 import scala.collection.mutable
 
@@ -51,7 +52,7 @@ trait ScPrimaryConstructor extends ScMember with ScMethodLike {
    *
    * In addition, view and context bounds generate an additional implicit parameter section.
    */
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def effectiveParameterClauses: Seq[ScParameterClause] = {
     def emptyParameterList: ScParameterClause =
       ScalaPsiElementFactory.createEmptyClassParamClauseWithContext(parameterList)
@@ -105,7 +106,7 @@ trait ScPrimaryConstructor extends ScMember with ScMethodLike {
     }
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def getFunctionWrappers: Seq[ScPrimaryConstructorWrapper] = {
     val buffer = mutable.ArrayBuffer.empty[ScPrimaryConstructorWrapper]
     buffer += new ScPrimaryConstructorWrapper(this)

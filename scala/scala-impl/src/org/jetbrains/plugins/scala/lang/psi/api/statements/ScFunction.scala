@@ -18,6 +18,7 @@ import com.intellij.psi.util.MethodSignatureBackedByPsiMethod
 import com.intellij.util.PlatformIcons
 import javax.swing.Icon
 import org.jetbrains.plugins.scala.JavaArrayFactoryUtil.ScFunctionFactory
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.icons.Icons
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
@@ -41,7 +42,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.nonvalue._
 import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.ScSubstitutor
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaNamesUtil
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 import org.jetbrains.plugins.scala.project.UserDataHolderExt
 
 import scala.annotation.tailrec
@@ -183,7 +184,7 @@ trait ScFunction extends ScalaPsiElement with ScMember with ScTypeParametersOwne
 
   def clauses: Option[ScParameters] = Some(paramClauses)
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def effectiveParameterClauses: Seq[ScParameterClause] = {
     val maybeOwner = if (isConstructor) {
       containingClass match {
@@ -274,7 +275,7 @@ trait ScFunction extends ScalaPsiElement with ScMember with ScTypeParametersOwne
   /**
    * @return Empty array, if containing class is null.
    */
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def getFunctionWrappers(isStatic: Boolean, isInterface: Boolean, cClass: Option[PsiClass] = None): Seq[ScFunctionWrapper] = {
     val buffer = new ArrayBuffer[ScFunctionWrapper]
     if (cClass.isDefined || containingClass != null) {
@@ -319,7 +320,7 @@ trait ScFunction extends ScalaPsiElement with ScMember with ScTypeParametersOwne
     getReturnTypeImpl
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   private def getReturnTypeImpl: PsiType = {
     val resultType = `type`().getOrAny match {
       case FunctionType(rt, _) => rt

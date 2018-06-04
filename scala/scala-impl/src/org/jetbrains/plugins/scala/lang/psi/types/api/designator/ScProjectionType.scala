@@ -3,7 +3,7 @@ package org.jetbrains.plugins.scala.lang.psi.types.api.designator
 import java.util.Objects
 
 import com.intellij.psi._
-import org.jetbrains.plugins.scala.caches.RecursionManager
+import org.jetbrains.plugins.scala.caches.{DropOn, RecursionManager}
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.ScBindingPattern
@@ -20,7 +20,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScTypeUtil.AliasType
 import org.jetbrains.plugins.scala.lang.resolve.processor.ResolveProcessor
 import org.jetbrains.plugins.scala.lang.resolve.{ResolveTargets, ScalaResolveResult}
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 import org.jetbrains.plugins.scala.util.ScEquivalenceUtil
 
 /**
@@ -90,7 +90,7 @@ class ScProjectionType private(val projected: ScType,
                                      (implicit visited: Set[ScType]): ScType =
     ScProjectionType(projected.recursiveVarianceUpdate(update, Invariant), element)
 
-  @CachedWithRecursionGuard(element, None, ModCount.getBlockModificationCount)
+  @CachedWithRecursionGuard(element, None, DropOn.semanticChange(element))
   private def actualImpl(projected: ScType): Option[(PsiNamedElement, ScSubstitutor)] = {
     val resolvePlace = {
       def fromClazz(definition: ScTypeDefinition): PsiElement =

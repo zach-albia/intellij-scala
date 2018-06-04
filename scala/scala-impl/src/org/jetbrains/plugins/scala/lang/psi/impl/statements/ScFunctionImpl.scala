@@ -8,6 +8,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi._
 import com.intellij.psi.scope.PsiScopeProcessor
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.PsiElementExt
 import org.jetbrains.plugins.scala.lang.lexer._
 import org.jetbrains.plugins.scala.lang.parser.ScalaElementTypes
@@ -19,7 +20,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScMember
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createIdentifier
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScFunctionStub
 import org.jetbrains.plugins.scala.lang.psi.stubs.elements.ScFunctionElementType
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 /**
  * @author ilyas
@@ -47,7 +48,7 @@ abstract class ScFunctionImpl protected (stub: ScFunctionStub, nodeType: ScFunct
     n.getPsi
   }
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def paramClauses: ScParameters = getStubOrPsiChild(ScalaElementTypes.PARAM_CLAUSES)
 
   override def processDeclarations(processor: PsiScopeProcessor, state: ResolveState,
@@ -76,6 +77,6 @@ abstract class ScFunctionImpl protected (stub: ScFunctionStub, nodeType: ScFunct
     true
   }
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def returnTypeElement: Option[ScTypeElement] = byPsiOrStub(findChild(classOf[ScTypeElement]))(_.typeElement)
 }

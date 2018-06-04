@@ -6,6 +6,7 @@ package expr
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.{PsiField, ResolveState}
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScVariable}
@@ -15,7 +16,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaNamesUtil
 import org.jetbrains.plugins.scala.lang.resolve.processor.MethodResolveProcessor
 import org.jetbrains.plugins.scala.lang.resolve.{ScalaResolveResult, StdKinds}
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 /**
   * @author Alexander Podkhalyuzin
@@ -36,13 +37,13 @@ class ScAssignStmtImpl(node: ASTNode) extends ScExpressionImplBase(node) with Sc
     }
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def resolveAssignment: Option[ScalaResolveResult] = resolveAssignmentInner(shapeResolve = false)
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def shapeResolveAssignment: Option[ScalaResolveResult] = resolveAssignmentInner(shapeResolve = true)
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def mirrorMethodCall: Option[ScMethodCall] = {
     getLExpression match {
       case ref: ScReferenceExpression =>

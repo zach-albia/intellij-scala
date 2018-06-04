@@ -17,7 +17,7 @@ import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.scope.processor.MethodsProcessor
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.{PsiTreeUtil, PsiUtil}
-import org.jetbrains.plugins.scala.caches.{CachesUtil, ScalaShortNamesCacheManager}
+import org.jetbrains.plugins.scala.caches.{DropOn, ScalaShortNamesCacheManager}
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.parser.ScalaElementTypes
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil.isLineTerminator
@@ -36,7 +36,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.designator.ScThisType
 import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.ScSubstitutor
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve.processor.BaseProcessor
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 import org.jetbrains.plugins.scala.project.ProjectContext
 
 import scala.collection.JavaConverters._
@@ -65,7 +65,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
 
   def desugaredElement: Option[ScTemplateDefinition] = None
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def physicalExtendsBlock: ScExtendsBlock = this.stubOrPsiChild(ScalaElementTypes.EXTENDS_BLOCK).orNull
 
   def extendsBlock: ScExtendsBlock = desugaredElement.map(_.extendsBlock).getOrElse(physicalExtendsBlock)
@@ -152,7 +152,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
     PsiClassImplUtil.getAllWithSubstitutorsByMap(this, MemberType.METHOD)
   }
 
-  @CachedInUserData(this, CachesUtil.libraryAwareModTracker(this))
+  @CachedInUserData(this, DropOn.semanticChange(this))
   override def getVisibleSignatures: JCollection[HierarchicalMethodSignature] = {
     PsiSuperMethodImplUtil.getVisibleSignatures(this)
   }
@@ -163,7 +163,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
   def functions: Seq[ScFunction] = extendsBlock.functions
   def aliases: Seq[ScTypeAlias] = extendsBlock.aliases
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def syntheticMethodsWithOverride: Seq[PsiMethod] = syntheticMethodsWithOverrideImpl
 
   /**
@@ -173,19 +173,19 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
 
   def allSynthetics: Seq[PsiMethod] = syntheticMethodsNoOverride ++ syntheticMethodsWithOverride
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def syntheticMethodsNoOverride: Seq[PsiMethod] = syntheticMethodsNoOverrideImpl
 
   protected def syntheticMethodsNoOverrideImpl: Seq[PsiMethod] = Seq.empty
 
   def typeDefinitions: Seq[ScTypeDefinition] = extendsBlock.typeDefinitions
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def syntheticTypeDefinitions: Seq[ScTypeDefinition] = syntheticTypeDefinitionsImpl
 
   protected def syntheticTypeDefinitionsImpl: Seq[ScTypeDefinition] = Seq.empty
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def syntheticMembers: Seq[ScMember] = syntheticMembersImpl
 
   protected def syntheticMembersImpl: Seq[ScMember] = Seq.empty
@@ -458,7 +458,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
     else superPaths.contains(basePath)
   }
 
-  @Cached(ModCount.getModificationCount, this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
   def cachedPath: Path = {
     val kind = this match {
       case _: ScTrait => Kind.ScTrait
@@ -471,14 +471,14 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
     Path(name, Option(qualifiedName), kind)
   }
 
-  @Cached(ModCount.getModificationCount, this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
   private def superPaths: Set[Path] = {
     if (DumbService.getInstance(getProject).isDumb) return Set.empty //to prevent failing during indexes
 
     supers.map(Path.of).toSet
   }
 
-  @Cached(ModCount.getModificationCount, this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
   private def superPathsDeep: Set[Path] = {
     if (DumbService.getInstance(getProject).isDumb) return Set.empty //to prevent failing during indexes
 

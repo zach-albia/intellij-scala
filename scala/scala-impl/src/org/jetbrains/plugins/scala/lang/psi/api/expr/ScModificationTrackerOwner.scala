@@ -3,12 +3,12 @@ package org.jetbrains.plugins.scala.lang.psi.api.expr
 import java.util.concurrent.atomic.AtomicLong
 
 import com.intellij.psi.{PsiElement, PsiModifiableCodeBlock}
-import org.jetbrains.plugins.scala.caches.CachesUtil
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiElement
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaFile
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScValueOrVariable}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 import org.jetbrains.plugins.scala.project.ProjectContext
 
 import scala.annotation.tailrec
@@ -25,7 +25,7 @@ trait ScModificationTrackerOwner extends ScalaPsiElement with PsiModifiableCodeB
 
   final def incModificationCount(): Long = blockModificationCount.incrementAndGet()
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def mirrorPosition(dummyIdentifier: String, offset: Int): Option[PsiElement] = {
     val index = offset - getTextRange.getStartOffset
 
@@ -62,7 +62,7 @@ object ScModificationTrackerOwner {
   @tailrec
   private def modificationCount(place: PsiElement, result: Long = 0)
                                (implicit context: ProjectContext): Long = place match {
-    case null | _: ScalaFile => result + CachesUtil.javaStructureTracker(context.project).getModificationCount
+    case null | _: ScalaFile => result + DropOn.globalStructureChange(context.project).getModificationCount
     case _ =>
       val delta = place match {
         case owner@ScModificationTrackerOwner() => owner.blockModificationCount.get()

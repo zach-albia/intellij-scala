@@ -5,22 +5,20 @@ package api
 package toplevel
 package typedef
 
-import scala.annotation.tailrec
-
 import com.intellij.openapi.util.Key
 import com.intellij.psi._
-import com.intellij.psi.search.{LocalSearchScope, PackageScope, SearchScope}
 import com.intellij.psi.util._
-import org.jetbrains.plugins.scala.extensions.{PsiElementExt, StubBasedExt}
+import org.jetbrains.plugins.scala.caches.DropOn
+import org.jetbrains.plugins.scala.extensions.StubBasedExt
 import org.jetbrains.plugins.scala.lang.psi.api.base.{ScAccessModifier, ScPrimaryConstructor}
-import org.jetbrains.plugins.scala.lang.psi.api.expr.ScBlock
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScTypeAlias, ScValueOrVariable}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.{ScExtendsBlock, ScTemplateBody}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScMember._
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaFileImpl
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScMemberOrLocal
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
+
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -55,7 +53,7 @@ trait ScMember extends ScalaPsiElement with ScModifierListOwner with PsiMember {
     *
     * `object a { def foo { def bar = 0 }}`
     */
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def containingClass: ScTemplateDefinition = {
     if (isLocalByStub) null
     else containingClassInner

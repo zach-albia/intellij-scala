@@ -6,12 +6,13 @@ import com.intellij.psi.scope.PsiScopeProcessor
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.{FileViewProvider, PsiClass, PsiElement, ResolveState}
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScDeclarationSequenceHolder
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaFile
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createScalaFileFromText
 import org.jetbrains.plugins.scala.lang.psi.impl.{ScalaFileImpl, ScalaPsiManager}
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 import org.jetbrains.sbt.project.module.SbtModule
 
 import scala.collection.JavaConverters._
@@ -39,7 +40,7 @@ class SbtFileImpl(provider: FileViewProvider) extends ScalaFileImpl(provider, Sb
     }
   }
 
-  @Cached(ModCount.getModificationCount, this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
   private def fileWithImplicitImports: Option[ScalaFile] = {
     val expressions = implicitImportExpressions ++ localObjectsWithDefinitions.map(_.qualifiedName + "._")
 

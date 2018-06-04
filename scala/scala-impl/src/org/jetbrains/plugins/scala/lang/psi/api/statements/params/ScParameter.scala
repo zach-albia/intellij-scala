@@ -5,11 +5,10 @@ package api
 package statements
 package params
 
-import javax.swing.Icon
-
 import com.intellij.psi._
-import com.intellij.psi.search.{GlobalSearchScope, LocalSearchScope, SearchScope}
 import com.intellij.psi.util.PsiTreeUtil
+import javax.swing.Icon
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.icons.Icons
 import org.jetbrains.plugins.scala.lang.psi.adapters.PsiParameterAdapter
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
@@ -20,7 +19,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.toplevel.{ScImportableDeclaratio
 import org.jetbrains.plugins.scala.lang.psi.types.api.{FunctionType, ValueType}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.psi.types.{ScParameterizedType, ScType, ScTypeExt, ScalaType}
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import scala.annotation.tailrec
 
@@ -142,7 +141,7 @@ trait ScParameter extends ScTypedDefinition with ScModifierListOwner
 
   def getTypeNoResolve: PsiType = PsiType.VOID
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def isDefaultParam: Boolean = calcIsDefaultParam(this, Set.empty)
 
 

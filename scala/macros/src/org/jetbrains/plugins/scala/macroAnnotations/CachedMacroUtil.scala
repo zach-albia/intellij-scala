@@ -1,8 +1,6 @@
 package org.jetbrains.plugins.scala.macroAnnotations
 
-import scala.annotation.tailrec
 import scala.language.experimental.macros
-import scala.reflect.api.Universe
 import scala.reflect.macros.whitebox
 
 /**
@@ -159,27 +157,6 @@ object CachedMacroUtil {
 
   def analyzeCachesEnabled(c: whitebox.Context): Boolean = c.settings.contains(ANALYZE_CACHES)
 
-  @tailrec
-  def modCountParamToModTracker(c: whitebox.Context)(tree: c.universe.Tree, psiElement: c.universe.Tree): c.universe.Tree = {
-    implicit val x: c.type = c
-    import c.universe._
-    tree match {
-      case q"modificationCount = $v" =>
-        modCountParamToModTracker(x)(v, psiElement)
-      case q"ModCount.$v" =>
-        modCountParamToModTracker(x)(q"$v", psiElement)
-      case q"$v" =>
-        ModCount.values.find(_.toString == v.toString) match {
-          case Some(ModCount.getBlockModificationCount) =>
-            q"$cachesUtilFQN.enclosingModificationOwner($psiElement)"
-          case Some(ModCount.getModificationCount) => q"$psiModificationTrackerFQN.SERVICE.getInstance($psiElement.getProject)"
-          case Some(ModCount.`anyScalaPsiModificationCount`) =>
-            q"$scalaPsiManagerFQN.AnyScalaPsiModificationTracker"
-          case _ => tree
-        }
-    }
-  }
-
   def withUIFreezingGuard(c: whitebox.Context)(tree: c.universe.Tree): c.universe.Tree = {
     import c.universe.Quasiquote
     val fqName = q"_root_.org.jetbrains.plugins.scala.util.UIFreezingGuard"
@@ -274,20 +251,4 @@ object CachedMacroUtil {
     else q"$cachesUtilFQN.getOrCreateKey[$cachesUtilFQN.CachedRef[$resultType]]($keyId)"
   }
 
-}
-
-object ModCount extends Enumeration {
-  type ModCount = Value
-  //any physical psi change
-  val getModificationCount = Value("getModificationCount")
-
-  //only changes that may affect return type of a current block
-  val getBlockModificationCount = Value("getBlockModificationCount")
-
-  //Use for hot methods: it has minimal overhead, but updates on each change
-  //
-  // PsiModificationTracker is not an option, because it
-  // - requires calling getProject first
-  // - doesn't work for non-physical elements
-  val anyScalaPsiModificationCount = Value("anyScalaPsiModificationCount")
 }

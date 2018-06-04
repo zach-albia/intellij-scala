@@ -2,9 +2,9 @@ package org.jetbrains.plugins.scala
 package lang
 package resolve
 
-import com.intellij.psi._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 
 trait ResolvableReferenceExpression
 
@@ -13,11 +13,11 @@ object ResolvableReferenceExpression {
   implicit class Resolver(val reference: ScReferenceExpression) extends AnyVal {
     import reference.projectContext
 
-    @CachedWithRecursionGuard(reference, ScalaResolveResult.EMPTY_ARRAY, ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(reference, ScalaResolveResult.EMPTY_ARRAY, DropOn.semanticChange(reference))
     def multiResolveImpl(incomplete: Boolean): Array[ScalaResolveResult] =
       new ReferenceExpressionResolver().resolve(reference, shapesOnly = false, incomplete)
 
-    @CachedWithRecursionGuard(reference, ScalaResolveResult.EMPTY_ARRAY, ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(reference, ScalaResolveResult.EMPTY_ARRAY, DropOn.semanticChange(reference))
     def shapeResolveImpl: Array[ScalaResolveResult] =
       new ReferenceExpressionResolver().resolve(reference, shapesOnly = true, incomplete = false)
   }

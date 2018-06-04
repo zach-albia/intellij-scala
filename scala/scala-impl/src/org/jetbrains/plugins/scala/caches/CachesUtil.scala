@@ -5,7 +5,6 @@ package caches
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicReference
 
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util._
 import com.intellij.psi._
@@ -94,7 +93,7 @@ object CachesUtil {
     @tailrec
     def calc(element: PsiElement): ModificationTracker = {
       PsiTreeUtil.getContextOfType(element, false, classOf[ScModificationTrackerOwner]) match {
-        case null => javaStructureTracker(elem.getProject)
+        case null => Tracker.globalStructureChange(elem.getProject)
         case owner@ScModificationTrackerOwner() =>
           new ModificationTracker {
             override def getModificationCount: Long = owner.modificationCount
@@ -114,9 +113,6 @@ object CachesUtil {
       case Some(owner) => updateModificationCount(owner.getContext)
       case _ =>
     }
-
-  def javaStructureTracker(project: Project): ModificationTracker =
-    PsiManager.getInstance(project).getModificationTracker.getJavaStructureModificationTracker
 
   case class ProbablyRecursionException[Data](elem: PsiElement,
                                               data: Data,

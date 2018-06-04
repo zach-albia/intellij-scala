@@ -5,11 +5,12 @@ package api
 package base
 
 import com.intellij.psi.PsiMethod
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.adapters.PsiTypeParametersOwnerAdapter
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScParameter, ScParameterClause, ScParameters, ScTypeParamClause}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScMember, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.{createClauseFromText, createTypeParameterClauseFromTextWithContext}
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedInUserData
 
 /**
  * A member that can be converted to a ScMethodType, ie a method or a constructor.
@@ -24,7 +25,7 @@ trait ScMethodLike extends ScMember with PsiMethod with PsiTypeParametersOwnerAd
    * in that context it will have different meaning. See SCL-3095.
    * @return generated type parameters only for constructors
    */
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getConstructorTypeParameters: Option[ScTypeParamClause] = {
     ScMethodLike.this match {
       case method: PsiMethod if method.isConstructor =>

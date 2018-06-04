@@ -1,5 +1,6 @@
 package org.jetbrains.plugins.scala.macroAnnotations
 
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.junit.Assert
 
 
@@ -10,7 +11,7 @@ import org.junit.Assert
 class CachedTest extends CachedTestBase {
   def testNoParametersSingleThread(): Unit = {
     class Foo extends Managed {
-      @Cached(ModCount.getModificationCount, this)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
       def currentTime(): Long = System.currentTimeMillis()
     }
 
@@ -32,7 +33,7 @@ class CachedTest extends CachedTestBase {
 
   def testModificationTrackers(): Unit = {
     object Foo extends Managed {
-      @Cached(ModCount.getModificationCount, this)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
       def currentTime: Long = System.currentTimeMillis()
     }
 
@@ -45,7 +46,7 @@ class CachedTest extends CachedTestBase {
 
   def testWithParameters(): Unit = {
     object Foo extends Managed {
-      @Cached(ModCount.getModificationCount, this)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject), getProject)
       def currentTime(a: Int, b: Int): Long = System.currentTimeMillis()
     }
 

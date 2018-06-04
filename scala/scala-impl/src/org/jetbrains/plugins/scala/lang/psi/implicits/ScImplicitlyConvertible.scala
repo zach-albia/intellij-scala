@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi._
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.api.InferUtil.findImplicits
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.ScBindingPattern
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
@@ -23,7 +24,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.AfterUpdate.{P
 import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.ScSubstitutor
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 import org.jetbrains.plugins.scala.project.ScalaLanguageLevel.Scala_2_10
 import org.jetbrains.plugins.scala.project._
 
@@ -84,7 +85,7 @@ class ScImplicitlyConvertible(val expression: ScExpression,
       }
     }
 
-  @CachedWithRecursionGuard(expression, Set.empty, ModCount.getBlockModificationCount)
+  @CachedWithRecursionGuard(expression, Set.empty, DropOn.semanticChange(expression))
   private def collectRegulars: Set[RegularImplicitResolveResult] = {
     ScalaPsiUtil.debug(s"Regular implicit map", LOG)
 
@@ -116,7 +117,7 @@ class ScImplicitlyConvertible(val expression: ScExpression,
     }
   }
 
-  @CachedWithRecursionGuard(expression, Set.empty, ModCount.getBlockModificationCount)
+  @CachedWithRecursionGuard(expression, Set.empty, DropOn.semanticChange(expression))
   private def collectCompanions(arguments: Seq[ScType]): Set[CompanionImplicitResolveResult] = {
     ScalaPsiUtil.debug(s"Companions implicit map", LOG)
 

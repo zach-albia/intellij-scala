@@ -5,6 +5,7 @@ package api
 package statements
 
 import com.intellij.psi._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.parser.ScalaElementTypes
 import org.jetbrains.plugins.scala.lang.psi.adapters.PsiAnnotatedAdapter
@@ -25,7 +26,7 @@ import org.jetbrains.plugins.scala.macroAnnotations._
 
 trait ScAnnotationsHolder extends ScalaPsiElement with PsiAnnotatedAdapter {
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def annotations: Seq[ScAnnotation] = this.stubOrPsiChild(ScalaElementTypes.ANNOTATIONS) match {
     case Some(ann) => ann.getAnnotations.toSeq
     case _ => Seq.empty

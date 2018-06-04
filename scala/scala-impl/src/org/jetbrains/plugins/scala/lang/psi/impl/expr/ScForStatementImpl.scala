@@ -8,6 +8,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.psi._
 import com.intellij.psi.scope._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.PsiElementExt
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns._
@@ -15,7 +16,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve.StdKinds
 import org.jetbrains.plugins.scala.lang.resolve.processor.CompletionProcessor
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -214,7 +215,7 @@ class ScForStatementImpl(node: ASTNode) extends ScExpressionImplBase(node) with 
     Some(exprText.toString())
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def getDesugarizedExpr: Option[ScExpression] = {
     val res = getDesugarizedExprText(forDisplay = false) match {
       case Some(text) =>

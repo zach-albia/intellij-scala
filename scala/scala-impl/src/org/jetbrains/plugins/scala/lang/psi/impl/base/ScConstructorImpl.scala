@@ -6,6 +6,7 @@ package base
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.api.InferUtil.SafeCheckException
 import org.jetbrains.plugins.scala.lang.psi.api.base._
@@ -27,7 +28,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.recursiveUpdate.ScSubstitutor
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve.MethodTypeProvider._
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import scala.collection.Seq
 import scala.collection.mutable.ArrayBuffer
@@ -206,10 +207,10 @@ class ScConstructorImpl(node: ASTNode) extends ScalaPsiElementImpl(node) with Sc
     }
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def matchedParameters: Seq[(ScExpression, Parameter)] = matchedParametersByClauses.flatten
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def matchedParametersByClauses: Seq[Seq[(ScExpression, Parameter)]] = {
     val paramClauses = this.reference.flatMap(r => Option(r.resolve())) match {
       case Some(pc: ScPrimaryConstructor) => pc.parameterList.clauses.map(_.parameters)

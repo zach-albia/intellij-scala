@@ -5,11 +5,11 @@ package impl
 package statements
 package params
 
-import javax.swing.Icon
-
 import com.intellij.lang.ASTNode
 import com.intellij.psi._
 import com.intellij.psi.search.{LocalSearchScope, SearchScope}
+import javax.swing.Icon
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.icons.Icons
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes._
@@ -26,7 +26,7 @@ import org.jetbrains.plugins.scala.lang.psi.stubs.ScTypeParamStub
 import org.jetbrains.plugins.scala.lang.psi.types.api.{ParameterizedType, TypeParameterType}
 import org.jetbrains.plugins.scala.lang.psi.types.{ScType, ScTypeExt}
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScTypeUtil.AliasType
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import scala.annotation.tailrec
 
@@ -85,13 +85,13 @@ class ScTypeParamImpl private (stub: ScTypeParamStub, node: ASTNode)
 
   override def getContainingClass: ScTemplateDefinition = null
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def isCovariant: Boolean = byStubOrPsi(_.isCovariant) {
     Option(findChildByType[PsiElement](tIDENTIFIER))
       .exists(_.getText == "+")
   }
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def isContravariant: Boolean = byStubOrPsi(_.isContravariant) {
     Option(findChildByType[PsiElement](tIDENTIFIER))
       .exists(_.getText == "-")

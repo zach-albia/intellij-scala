@@ -5,7 +5,8 @@ package api
 package base
 package types
 
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.caches.DropOn
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 /** 
 * @author Alexander Podkhalyuzin
@@ -35,7 +36,7 @@ object ScParameterizedTypeElement {
 }
 
 trait ScDesugarizableToParametrizedTypeElement extends ScDesugarizableTypeElement {
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   override final def computeDesugarizedType: Option[ScParameterizedTypeElement] = {
     super.computeDesugarizedType match {
       case Some(typeElement: ScParameterizedTypeElement) => Some(typeElement)

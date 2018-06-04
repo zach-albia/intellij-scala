@@ -7,6 +7,7 @@ package params
 
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.parser.ScalaElementTypes
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScPrimaryConstructor
@@ -16,7 +17,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.statements.params._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScClass
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory._
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScParamClauseStub
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 
 /**
   * @author Alexander Podkhalyuzin
@@ -31,12 +32,12 @@ class ScParameterClauseImpl private(stub: ScParamClauseStub, node: ASTNode)
 
   override def toString: String = "ParametersClause"
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def parameters: Seq[ScParameter] = {
     getStubOrPsiChildren[ScParameter](TokenSets.PARAMETERS, JavaArrayFactoryUtil.ScParameterFactory).toSeq
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   override def effectiveParameters: Seq[ScParameter] = {
     if (!isImplicit) return parameters
 
@@ -68,7 +69,7 @@ class ScParameterClauseImpl private(stub: ScParamClauseStub, node: ASTNode)
     syntheticParameters ++ parameters
   }
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def isImplicit: Boolean = byStubOrPsi(_.isImplicit)(findChildByType(ScalaTokenTypes.kIMPLICIT) != null)
 
   def addParameter(param: ScParameter): ScParameterClause = {

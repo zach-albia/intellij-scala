@@ -26,7 +26,7 @@ object CachedInUserData {
     def parameters: (Tree, Tree) = {
       c.prefix.tree match {
         case q"new CachedInUserData(..$params)" if params.length == 2 =>
-          (params.head, modCountParamToModTracker(c)(params(1), params.head))
+          (params(0), params(1))
         case _ => abort("Wrong annotation parameters!")
       }
     }

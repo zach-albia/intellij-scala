@@ -6,14 +6,14 @@ package toplevel
 package templates
 
 import com.intellij.psi.{PsiClass, PsiElementVisitor}
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScStableCodeReferenceElement
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.{ScParameterizedTypeElement, ScSimpleTypeElement, ScTypeElement}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScTypeAliasDefinition
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector
 import org.jetbrains.plugins.scala.lang.psi.types.{ScType, ScTypeExt}
-import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 import org.jetbrains.plugins.scala.project.ProjectContext
 
 /** 
@@ -24,7 +24,7 @@ import org.jetbrains.plugins.scala.project.ProjectContext
 
 trait ScTemplateParents extends ScalaPsiElement {
   def typeElements: Seq[ScTypeElement]
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def syntheticTypeElements: Seq[ScTypeElement] = {
     getContext.getContext match {
       case td: ScTypeDefinition => SyntheticMembersInjector.injectSupers(td)

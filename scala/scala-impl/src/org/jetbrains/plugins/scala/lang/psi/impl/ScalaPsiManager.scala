@@ -20,7 +20,7 @@ import com.intellij.psi.search.{DelegatingGlobalSearchScope, GlobalSearchScope, 
 import com.intellij.util.ArrayUtil
 import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.plugins.scala.caches.{CachesUtil, ScalaShortNamesCacheManager}
+import org.jetbrains.plugins.scala.caches.{CachesUtil, ScalaShortNamesCacheManager, Tracker}
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScTypeAlias
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.idToName
@@ -310,7 +310,7 @@ class ScalaPsiManager(val project: Project) {
 
   object CacheInvalidator extends PsiTreeChangeAdapter {
     @volatile
-    private var lastJavaStructureModCount: Long = 0L
+    private var lastGlobalStructureCount: Long = 0L
 
     private def fromIdeaInternalFile(event: PsiTreeChangeEvent) = {
       val virtFile = event.getFile match {
@@ -334,9 +334,9 @@ class ScalaPsiManager(val project: Project) {
 
       CachesUtil.updateModificationCount(event.getParent)
       clearOnChange()
-      val count = CachesUtil.javaStructureTracker(project).getModificationCount
-      if (lastJavaStructureModCount != count) {
-        lastJavaStructureModCount = count
+      val count = Tracker.globalStructureChange(project).getModificationCount
+      if (lastGlobalStructureCount != count) {
+        lastGlobalStructureCount = count
         clearOnJavaStructureChange()
       }
     }
@@ -394,8 +394,6 @@ object ScalaPsiManager {
       manager.clearOnLowMemory()
     }, project)
   }
-
-  object AnyScalaPsiModificationTracker extends SimpleModificationTracker
 }
 
 class ScalaPsiManagerComponent(project: Project) extends AbstractProjectComponent(project) {

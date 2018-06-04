@@ -33,7 +33,7 @@ object Cached {
         case q"new Cached(..$params)" if params.length == 2 =>
           val depItem = params(0).asInstanceOf[c.universe.Tree]
           val psiElement = params(1).asInstanceOf[c.universe.Tree]
-          val modTracker = modCountParamToModTracker(c)(depItem, psiElement)
+          val modTracker = depItem
           (modTracker, psiElement)
         case _ => abort("Wrong parameters")
       }

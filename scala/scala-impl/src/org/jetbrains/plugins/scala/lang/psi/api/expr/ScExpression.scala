@@ -6,6 +6,7 @@ package expr
 
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi._
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.{PsiNamedElementExt, StringExt}
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil.{MethodValue, isAnonymousExpression}
 import org.jetbrains.plugins.scala.lang.psi.api.InferUtil.{SafeCheckException, extractImplicitParameterType}
@@ -20,7 +21,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.designator.ScDesignatorTyp
 import org.jetbrains.plugins.scala.lang.psi.types.nonvalue.{Parameter, ScMethodType, ScTypePolymorphicType}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 import org.jetbrains.plugins.scala.project.ProjectPsiElementExt
 import org.jetbrains.plugins.scala.project.ScalaLanguageLevel.Scala_2_11
 
@@ -250,17 +251,17 @@ object ScExpression {
 
     def expectedTypes(fromUnderscore: Boolean = true): Seq[ScType] = expectedTypesEx(fromUnderscore).map(_._1)
 
-    @CachedWithRecursionGuard(expr, Array.empty[ParameterType], ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(expr, Array.empty[ParameterType], DropOn.semanticChange(expr))
     def expectedTypesEx(fromUnderscore: Boolean = true): Array[ParameterType] = {
       ExpectedTypes.instance().expectedExprTypes(expr, fromUnderscore = fromUnderscore)
     }
 
-    @CachedWithRecursionGuard(expr, None, ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(expr, None, DropOn.semanticChange(expr))
     def smartExpectedType(fromUnderscore: Boolean = true): Option[ScType] = ExpectedTypes.instance().smartExpectedType(expr, fromUnderscore)
 
     def getTypeIgnoreBaseType: TypeResult = getTypeAfterImplicitConversion(ignoreBaseTypes = true).tr
 
-    @CachedWithRecursionGuard(expr, Failure("Recursive getNonValueType"), ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(expr, Failure("Recursive getNonValueType"), DropOn.semanticChange(expr))
     def getNonValueType(ignoreBaseType: Boolean = false,
                         fromUnderscore: Boolean = false): TypeResult = {
       ProgressManager.checkCanceled()
@@ -291,7 +292,7 @@ object ScExpression {
       * @param ignoreBaseTypes parameter to avoid value discarding, literal narrowing, widening
       *                        this parameter is useful for refactorings (introduce variable)
       */
-    @CachedWithRecursionGuard(expr, ExpressionTypeResult(Failure("Recursive getTypeAfterImplicitConversion")), ModCount.getBlockModificationCount)
+    @CachedWithRecursionGuard(expr, ExpressionTypeResult(Failure("Recursive getTypeAfterImplicitConversion")), DropOn.semanticChange(expr))
     def getTypeAfterImplicitConversion(checkImplicits: Boolean = true,
                                        isShape: Boolean = false,
                                        expectedOption: Option[ScType] = None,
@@ -349,7 +350,7 @@ object ScExpression {
     }
 
     @CachedWithRecursionGuard(expr, Failure("Recursive getTypeWithoutImplicits"),
-      ModCount.getBlockModificationCount)
+      DropOn.semanticChange(expr))
     def getTypeWithoutImplicits(ignoreBaseTypes: Boolean = false, fromUnderscore: Boolean = false): TypeResult = {
       ProgressManager.checkCanceled()
       val fromNullLiteral = expr match {

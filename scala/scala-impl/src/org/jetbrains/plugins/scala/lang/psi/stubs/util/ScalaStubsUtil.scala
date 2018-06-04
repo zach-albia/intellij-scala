@@ -12,7 +12,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
-import org.jetbrains.plugins.scala.caches.CachesUtil
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.finder.ScalaFilterScope
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.ScSelfTypeElement
@@ -56,7 +56,7 @@ object ScalaStubsUtil {
   }
 
   def getSelfTypeInheritors(clazz: PsiClass): Seq[ScTemplateDefinition] = {
-    @CachedInUserData(clazz, CachesUtil.enclosingModificationOwner(clazz))
+    @CachedInUserData(clazz, DropOn.semanticChange(clazz))
     def selfTypeInheritorsInner(): Seq[ScTemplateDefinition] = {
       val inheritors = new ArrayBuffer[ScTemplateDefinition]
       val name = clazz.name

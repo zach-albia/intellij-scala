@@ -6,6 +6,7 @@ package toplevel
 
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.{PsiClass, PsiMethod}
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.api.statements._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
@@ -15,7 +16,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.Unit
 import org.jetbrains.plugins.scala.lang.psi.types.nonvalue.Parameter
 import org.jetbrains.plugins.scala.lang.psi.types.result.{Typeable, _}
 import org.jetbrains.plugins.scala.lang.psi.types.{ScType, api}
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 
 /**
  * Member definitions, classes, named patterns which have types
@@ -31,7 +32,7 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
     case (tpe, index) => Parameter(tpe, isRepeated = false, index = index)
   }.toArray
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getUnderEqualsMethod: PsiMethod = {
     val hasModifierProperty: String => Boolean = nameContext match {
       case v: ScModifierListOwner => v.hasModifierProperty
@@ -41,7 +42,7 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
     new FakePsiMethod(this, name + "_=", typeArr2paramArr(Array[ScType](tType)), Unit, hasModifierProperty)
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getGetBeanMethod: PsiMethod = {
     val hasModifierProperty: String => Boolean = nameContext match {
       case v: ScModifierListOwner => v.hasModifierProperty
@@ -51,7 +52,7 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
       this.`type`().getOrAny, hasModifierProperty)
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getSetBeanMethod: PsiMethod = {
     val hasModifierProperty: String => Boolean = nameContext match {
       case v: ScModifierListOwner => v.hasModifierProperty
@@ -61,7 +62,7 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
     new FakePsiMethod(this, "set" + name.capitalize, typeArr2paramArr(Array[ScType](tType)), api.Unit, hasModifierProperty)
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getIsBeanMethod: PsiMethod = {
     val hasModifierProperty: String => Boolean = nameContext match {
       case v: ScModifierListOwner => v.hasModifierProperty
@@ -71,7 +72,7 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
       this.`type`().getOrAny, hasModifierProperty)
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def getBeanMethods: Seq[PsiMethod] = {
     val (member, needSetter) = nameContext match {
       case v: ScValue => (v, false)
@@ -93,13 +94,13 @@ trait ScTypedDefinition extends ScNamedElement with Typeable {
 
   import org.jetbrains.plugins.scala.lang.psi.light.PsiTypedDefinitionWrapper.DefinitionRole._
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def getTypedDefinitionWrapper(isStatic: Boolean, isInterface: Boolean, role: DefinitionRole,
                                 cClass: Option[PsiClass] = None): PsiTypedDefinitionWrapper = {
     new PsiTypedDefinitionWrapper(this, isStatic, isInterface, role, cClass)
   }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def getStaticTypedDefinitionWrapper(role: DefinitionRole, cClass: PsiClassWrapper): StaticPsiTypedDefinitionWrapper = {
     new StaticPsiTypedDefinitionWrapper(this, role, cClass)
   }

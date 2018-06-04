@@ -5,12 +5,13 @@ package api
 package base
 package types
 
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.{PsiElementExt, ifReadAllowed}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScTypeParam
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory._
 import org.jetbrains.plugins.scala.lang.psi.types._
 import org.jetbrains.plugins.scala.lang.psi.types.result._
-import org.jetbrains.plugins.scala.macroAnnotations.{CachedWithRecursionGuard, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.CachedWithRecursionGuard
 
 /**
 * @author Alexander Podkhalyuzin
@@ -27,7 +28,7 @@ trait ScTypeElement extends ScalaPsiElement with Typeable {
   def `type`(): TypeResult = getType
 
   @CachedWithRecursionGuard(this, Failure("Recursive type of type element"),
-    ModCount.getBlockModificationCount)
+    DropOn.semanticChange(this))
   private[types] def getType: TypeResult = innerType
 
   def getTypeNoConstructor: TypeResult = getType

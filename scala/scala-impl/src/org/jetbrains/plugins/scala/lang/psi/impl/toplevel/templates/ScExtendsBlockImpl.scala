@@ -8,6 +8,7 @@ package templates
 import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiClass
 import org.jetbrains.plugins.scala.JavaArrayFactoryUtil.ScTemplateParentsFactory
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.TokenSets.TEMPLATE_PARENTS
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
@@ -24,7 +25,7 @@ import org.jetbrains.plugins.scala.lang.psi.stubs.ScExtendsBlockStub
 import org.jetbrains.plugins.scala.lang.psi.types._
 import org.jetbrains.plugins.scala.lang.psi.types.api.designator.ScDesignatorType
 import org.jetbrains.plugins.scala.lang.psi.types.result._
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.{Cached, CachedInUserData}
 
 import scala.collection.Seq
 import scala.collection.mutable.ListBuffer
@@ -42,7 +43,7 @@ class ScExtendsBlockImpl private(stub: ScExtendsBlockStub, node: ASTNode)
 
   override def toString: String = "ExtendsBlock"
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def templateBody: Option[ScTemplateBody] = {
     def childStubTemplate(stub: ScExtendsBlockStub) =
       Option(stub.findChildStubByType(TEMPLATE_BODY))
@@ -65,7 +66,7 @@ class ScExtendsBlockImpl private(stub: ScExtendsBlockStub, node: ASTNode)
       _.`type`().toOption
     }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def superTypes: List[ScType] = {
     val buffer = new ListBuffer[ScType]
 
@@ -170,7 +171,7 @@ class ScExtendsBlockImpl private(stub: ScExtendsBlockStub, node: ASTNode)
       case _ => false
     }
 
-  @Cached(ModCount.getBlockModificationCount, this)
+  @Cached(DropOn.semanticChange(this), this)
   def syntheticTypeElements: Seq[ScTypeElement] = {
     if (templateParents.nonEmpty) return Seq.empty //will be handled separately
     getContext match {
@@ -179,7 +180,7 @@ class ScExtendsBlockImpl private(stub: ScExtendsBlockStub, node: ASTNode)
     }
   }
 
-  @CachedInUserData(this, ModCount.getBlockModificationCount)
+  @CachedInUserData(this, DropOn.semanticChange(this))
   def supers: Seq[PsiClass] = {
     val buffer = new ListBuffer[PsiClass]
 

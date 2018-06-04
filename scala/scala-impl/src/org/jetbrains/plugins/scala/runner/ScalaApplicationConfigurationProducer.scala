@@ -7,9 +7,9 @@ import com.intellij.execution.application.{ApplicationConfiguration, Application
 import com.intellij.execution.impl.RunManagerImpl
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.Ref
-import com.intellij.psi.util.{PsiMethodUtil, PsiTreeUtil}
 import com.intellij.psi._
-import org.jetbrains.plugins.scala.caches.CachesUtil
+import com.intellij.psi.util.{PsiMethodUtil, PsiTreeUtil}
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaFile
@@ -149,7 +149,7 @@ object ScalaMainMethodUtil {
       }
     }
 
-    @CachedInUserData(obj, CachesUtil.enclosingModificationOwner(obj))
+    @CachedInUserData(obj, DropOn.semanticChange(obj))
     def findMainMethodInner(): Option[PsiMethod] = {
       declaredMain(obj) orElse Option(PsiMethodUtil.findMainMethod(new PsiClassWrapper(obj, obj.qualifiedName, obj.name)))
     }

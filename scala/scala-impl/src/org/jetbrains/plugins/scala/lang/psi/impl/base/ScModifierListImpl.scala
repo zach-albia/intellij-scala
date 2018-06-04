@@ -8,6 +8,7 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi._
 import com.intellij.psi.tree.IElementType
 import org.jetbrains.plugins.scala.JavaArrayFactoryUtil.ScAnnotationsFactory
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.extensions.StubBasedExt
 import org.jetbrains.plugins.scala.lang.TokenSets.TokenSetExt
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
@@ -17,7 +18,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base._
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory._
 import org.jetbrains.plugins.scala.lang.psi.impl.base.ScModifierListImpl.AllModifiers
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScModifiersStub
-import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
+import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -38,7 +39,7 @@ class ScModifierListImpl private (stub: ScModifiersStub, node: ASTNode)
 
   override def hasModifierProperty(name: String): Boolean = modifiers.contains(name)
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def modifiers: Array[String] = byStubOrPsi(_.modifiers)(AllModifiers.filter(hasModifierPropertyImpl))
 
   private def hasModifierPropertyImpl(name: String): Boolean = {
@@ -72,7 +73,7 @@ class ScModifierListImpl private (stub: ScModifiersStub, node: ASTNode)
     }
   }
 
-  @Cached(ModCount.anyScalaPsiModificationCount, this)
+  @Cached(DropOn.anyScalaPsiChange, this)
   def accessModifier: Option[ScAccessModifier] = Option(getStubOrPsiChild(ScalaElementTypes.ACCESS_MODIFIER))
 
   def hasExplicitModifiers: Boolean = byStubOrPsi(_.hasExplicitModifiers) {
