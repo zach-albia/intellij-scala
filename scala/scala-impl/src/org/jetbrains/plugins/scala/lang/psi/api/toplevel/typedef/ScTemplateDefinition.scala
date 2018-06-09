@@ -65,7 +65,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
 
   def desugaredElement: Option[ScTemplateDefinition] = None
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def physicalExtendsBlock: ScExtendsBlock = this.stubOrPsiChild(ScalaElementTypes.EXTENDS_BLOCK).orNull
 
   def extendsBlock: ScExtendsBlock = desugaredElement.map(_.extendsBlock).getOrElse(physicalExtendsBlock)
@@ -458,7 +458,7 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
     else superPaths.contains(basePath)
   }
 
-  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject))
   def cachedPath: Path = {
     val kind = this match {
       case _: ScTrait => Kind.ScTrait
@@ -471,14 +471,14 @@ trait ScTemplateDefinition extends ScNamedElement with PsiClassAdapter with Type
     Path(name, Option(qualifiedName), kind)
   }
 
-  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject))
   private def superPaths: Set[Path] = {
     if (DumbService.getInstance(getProject).isDumb) return Set.empty //to prevent failing during indexes
 
     supers.map(Path.of).toSet
   }
 
-  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject))
   private def superPathsDeep: Set[Path] = {
     if (DumbService.getInstance(getProject).isDumb) return Set.empty //to prevent failing during indexes
 

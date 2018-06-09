@@ -39,7 +39,7 @@ class ScModifierListImpl private (stub: ScModifiersStub, node: ASTNode)
 
   override def hasModifierProperty(name: String): Boolean = modifiers.contains(name)
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def modifiers: Array[String] = byStubOrPsi(_.modifiers)(AllModifiers.filter(hasModifierPropertyImpl))
 
   private def hasModifierPropertyImpl(name: String): Boolean = {
@@ -73,7 +73,7 @@ class ScModifierListImpl private (stub: ScModifiersStub, node: ASTNode)
     }
   }
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def accessModifier: Option[ScAccessModifier] = Option(getStubOrPsiChild(ScalaElementTypes.ACCESS_MODIFIER))
 
   def hasExplicitModifiers: Boolean = byStubOrPsi(_.hasExplicitModifiers) {

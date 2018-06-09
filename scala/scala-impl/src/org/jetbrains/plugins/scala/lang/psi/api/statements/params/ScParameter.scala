@@ -141,7 +141,7 @@ trait ScParameter extends ScTypedDefinition with ScModifierListOwner
 
   def getTypeNoResolve: PsiType = PsiType.VOID
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def isDefaultParam: Boolean = calcIsDefaultParam(this, Set.empty)
 
 

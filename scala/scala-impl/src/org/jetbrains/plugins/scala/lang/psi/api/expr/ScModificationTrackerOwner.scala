@@ -25,7 +25,7 @@ trait ScModificationTrackerOwner extends ScalaPsiElement with PsiModifiableCodeB
 
   final def incModificationCount(): Long = blockModificationCount.incrementAndGet()
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def mirrorPosition(dummyIdentifier: String, offset: Int): Option[PsiElement] = {
     val index = offset - getTextRange.getStartOffset
 

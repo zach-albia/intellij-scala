@@ -45,7 +45,7 @@ object IdeaUtil {
     }
   }
 
-  @Cached(ModificationTracker.NEVER_CHANGED, null)
+  @Cached(ModificationTracker.NEVER_CHANGED)
   private def isMetaParadiseJar(path: String): Boolean = {
     val file = new File(path)
     if (!JarUtil.containsEntry(file, "scalac-plugin.xml")) return false

@@ -156,7 +156,7 @@ class ScObjectImpl protected (stub: ScTemplateDefinitionStub, node: ASTNode)
 
   override protected def syntheticMethodsNoOverrideImpl: Seq[PsiMethod] = SyntheticMembersInjector.inject(this, withOverride = false)
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def fakeCompanionClass: Option[PsiClass] = getCompanionModule(this) match {
     case Some(_) => None
     case None =>
@@ -170,7 +170,7 @@ class ScObjectImpl protected (stub: ScTemplateDefinitionStub, node: ASTNode)
     case _ => getCompanionModule(this).get
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   private def getModuleField: Option[PsiField] = {
     if (getQualifiedName.split('.').exists(JavaLexer.isKeyword(_, PsiUtil.getLanguageLevel(this.getProject)))) None
     else {
@@ -214,7 +214,7 @@ class ScObjectImpl protected (stub: ScTemplateDefinitionStub, node: ASTNode)
     res.toArray
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   override def getConstructors: Array[PsiMethod] = Array(new EmptyPrivateConstructor(this))
 
   override def isPhysical: Boolean = {
@@ -231,7 +231,7 @@ class ScObjectImpl protected (stub: ScTemplateDefinitionStub, node: ASTNode)
     getSupers.filter(_.isInterface)
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   private def cachedDesugared(tree: scala.meta.Defn.Object, isSynthetic: Boolean): ScTemplateDefinition = {
     val text = if (isSynthetic) {
       val syntheticText = getCompanionModule(this) match {

@@ -122,7 +122,7 @@ class PsiClassWrapper(val definition: ScTemplateDefinition,
     }
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   private def getEmptyConstructor: PsiMethod = new EmptyPrivateConstructor(this)
 
   def getConstructors: Array[PsiMethod] = {

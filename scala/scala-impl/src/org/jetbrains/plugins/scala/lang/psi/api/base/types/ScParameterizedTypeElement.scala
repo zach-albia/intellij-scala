@@ -36,7 +36,7 @@ object ScParameterizedTypeElement {
 }
 
 trait ScDesugarizableToParametrizedTypeElement extends ScDesugarizableTypeElement {
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   override final def computeDesugarizedType: Option[ScParameterizedTypeElement] = {
     super.computeDesugarizedType match {
       case Some(typeElement: ScParameterizedTypeElement) => Some(typeElement)

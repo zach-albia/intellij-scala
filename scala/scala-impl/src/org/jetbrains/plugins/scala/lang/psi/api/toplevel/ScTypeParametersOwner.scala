@@ -13,7 +13,7 @@ import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 trait ScTypeParametersOwner extends ScalaPsiElement {
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def typeParameters: Seq[ScTypeParam] = {
     typeParametersClause match {
       case Some(clause) => clause.typeParameters

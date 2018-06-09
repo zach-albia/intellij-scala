@@ -59,7 +59,7 @@ class ScTemplateBodyImpl private (stub: ScTemplateBodyStub, node: ASTNode)
   def exprs: Seq[ScExpression] =
     getStubOrPsiChildren(EXPRESSION_SET, ScExpressionFactory).toSeq
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def selfTypeElement: Option[ScSelfTypeElement] =
     Option(getStubOrPsiChild(SELF_TYPE))
 

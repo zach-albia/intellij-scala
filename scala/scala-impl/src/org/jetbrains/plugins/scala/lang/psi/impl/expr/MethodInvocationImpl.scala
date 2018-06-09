@@ -60,7 +60,7 @@ abstract class MethodInvocationImpl(node: ASTNode) extends ScExpressionImplBase(
     case _ => None
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   private def innerTypeExt: InvocationData = try {
     tryToGetInnerTypeExt(useExpectedType = true)
   } catch {

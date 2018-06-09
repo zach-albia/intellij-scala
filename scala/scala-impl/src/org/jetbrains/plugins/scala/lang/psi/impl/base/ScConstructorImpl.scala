@@ -207,10 +207,10 @@ class ScConstructorImpl(node: ASTNode) extends ScalaPsiElementImpl(node) with Sc
     }
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def matchedParameters: Seq[(ScExpression, Parameter)] = matchedParametersByClauses.flatten
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def matchedParametersByClauses: Seq[Seq[(ScExpression, Parameter)]] = {
     val paramClauses = this.reference.flatMap(r => Option(r.resolve())) match {
       case Some(pc: ScPrimaryConstructor) => pc.parameterList.clauses.map(_.parameters)

@@ -24,7 +24,7 @@ import org.jetbrains.plugins.scala.project.ProjectContext
 
 trait ScTemplateParents extends ScalaPsiElement {
   def typeElements: Seq[ScTypeElement]
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def syntheticTypeElements: Seq[ScTypeElement] = {
     getContext.getContext match {
       case td: ScTypeDefinition => SyntheticMembersInjector.injectSupers(td)

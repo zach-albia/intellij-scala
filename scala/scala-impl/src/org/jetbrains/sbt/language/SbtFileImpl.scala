@@ -40,7 +40,7 @@ class SbtFileImpl(provider: FileViewProvider) extends ScalaFileImpl(provider, Sb
     }
   }
 
-  @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+  @Cached(DropOn.anyPhysicalPsiChange(getProject))
   private def fileWithImplicitImports: Option[ScalaFile] = {
     val expressions = implicitImportExpressions ++ localObjectsWithDefinitions.map(_.qualifiedName + "._")
 

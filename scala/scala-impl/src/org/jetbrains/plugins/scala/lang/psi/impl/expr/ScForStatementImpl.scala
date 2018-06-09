@@ -215,7 +215,7 @@ class ScForStatementImpl(node: ASTNode) extends ScExpressionImplBase(node) with 
     Some(exprText.toString())
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def getDesugarizedExpr: Option[ScExpression] = {
     val res = getDesugarizedExprText(forDisplay = false) match {
       case Some(text) =>

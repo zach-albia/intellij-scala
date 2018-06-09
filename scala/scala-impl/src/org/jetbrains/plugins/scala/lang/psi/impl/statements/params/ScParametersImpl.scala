@@ -29,7 +29,7 @@ class ScParametersImpl private (stub: ScParamClausesStub, node: ASTNode)
 
   override def toString: String = "Parameters"
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def clauses: Seq[ScParameterClause] = {
     getStubOrPsiChildren(ScalaElementTypes.PARAM_CLAUSE, JavaArrayFactoryUtil.ScParameterClauseFactory).toSeq
   }

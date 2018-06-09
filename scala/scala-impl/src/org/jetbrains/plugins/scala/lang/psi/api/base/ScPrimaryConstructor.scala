@@ -106,7 +106,7 @@ trait ScPrimaryConstructor extends ScMember with ScMethodLike {
     }
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def getFunctionWrappers: Seq[ScPrimaryConstructorWrapper] = {
     val buffer = mutable.ArrayBuffer.empty[ScPrimaryConstructorWrapper]
     buffer += new ScPrimaryConstructorWrapper(this)

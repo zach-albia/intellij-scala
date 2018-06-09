@@ -16,7 +16,7 @@ import scala.reflect.macros.whitebox
   * Author: Svyatoslav Ilinskiy
   * Date: 9/18/15.
   */
-class Cached(dependencyItem: Object, psiElement: Any) extends StaticAnnotation {
+class Cached(modTracker: Object) extends StaticAnnotation {
   def macroTransform(annottees: Any*) = macro Cached.cachedImpl
 }
 
@@ -28,19 +28,12 @@ object Cached {
 
     def abort(message: String) = c.abort(c.enclosingPosition, message)
 
-    def parameters: (Tree, Tree) = {
-      c.prefix.tree match {
-        case q"new Cached(..$params)" if params.length == 2 =>
-          val depItem = params(0).asInstanceOf[c.universe.Tree]
-          val psiElement = params(1).asInstanceOf[c.universe.Tree]
-          val modTracker = depItem
-          (modTracker, psiElement)
-        case _ => abort("Wrong parameters")
-      }
+    //from annotation parameter
+    val modTracker = c.prefix.tree match {
+      case q"new Cached(..$params)" if params.length == 1 =>
+        params.head.asInstanceOf[c.universe.Tree]
+      case _ => abort("Wrong parameters")
     }
-
-    //annotation parameters
-    val (modTracker, psiElement) = parameters
 
     annottees.toList match {
       case DefDef(mods, name, tpParams, paramss, retTp, rhs) :: Nil =>

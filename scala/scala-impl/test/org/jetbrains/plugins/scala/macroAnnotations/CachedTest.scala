@@ -11,7 +11,7 @@ import org.junit.Assert
 class CachedTest extends CachedTestBase {
   def testNoParametersSingleThread(): Unit = {
     class Foo extends Managed {
-      @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject))
       def currentTime(): Long = System.currentTimeMillis()
     }
 
@@ -33,7 +33,7 @@ class CachedTest extends CachedTestBase {
 
   def testModificationTrackers(): Unit = {
     object Foo extends Managed {
-      @Cached(DropOn.anyPhysicalPsiChange(getProject), this)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject))
       def currentTime: Long = System.currentTimeMillis()
     }
 
@@ -46,7 +46,7 @@ class CachedTest extends CachedTestBase {
 
   def testWithParameters(): Unit = {
     object Foo extends Managed {
-      @Cached(DropOn.anyPhysicalPsiChange(getProject), getProject)
+      @Cached(DropOn.anyPhysicalPsiChange(getProject))
       def currentTime(a: Int, b: Int): Long = System.currentTimeMillis()
     }
 

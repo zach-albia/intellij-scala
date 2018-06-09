@@ -26,7 +26,7 @@ import org.jetbrains.plugins.scala.macroAnnotations.Cached
 
 trait ScNamedElement extends ScalaPsiElement with PsiNameIdentifierOwner with NavigatablePsiElement {
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def name: String = {
     this match {
       case st: StubBasedPsiElementBase[_] =>  st.getGreenStub match {
@@ -39,7 +39,7 @@ trait ScNamedElement extends ScalaPsiElement with PsiNameIdentifierOwner with Na
 
   def nameInner: String = nameId.getText
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def nameContext: PsiElement =
     this.withParentsInFile
       .find(ScalaPsiUtil.isNameContext)

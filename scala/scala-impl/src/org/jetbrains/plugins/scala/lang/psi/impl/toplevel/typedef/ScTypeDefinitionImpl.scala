@@ -181,7 +181,7 @@ abstract class ScTypeDefinitionImpl protected (stub: ScTemplateDefinitionStub,
     }
   }
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   override final def getQualifiedName: String = byStubOrPsi(_.javaQualifiedName)(javaQualName())
 
   private def javaQualName(): String = {
@@ -198,7 +198,7 @@ abstract class ScTypeDefinitionImpl protected (stub: ScTemplateDefinitionStub,
     res
   }
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   override def qualifiedName: String = byStubOrPsi(_.getQualifiedName)(qualName())
 
   private def qualName(): String = qualifiedName(".")
@@ -377,7 +377,7 @@ abstract class ScTypeDefinitionImpl protected (stub: ScTemplateDefinitionStub,
     ScalaPsiImplementationHelper.getOriginalClass(this)
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   private def cachedDesugared(tree: scala.meta.Tree): ScTemplateDefinition = {
     ScalaPsiElementFactory.createTemplateDefinitionFromText(tree.toString(), getContext, this)
       .setDesugared(actualElement = this)

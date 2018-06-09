@@ -230,7 +230,7 @@ class ScClassImpl protected (stub: ScTemplateDefinitionStub, node: ASTNode)
       " = throw new Error(\"\")"
   }
 
-  @Cached(DropOn.semanticChange(this), this)
+  @Cached(DropOn.semanticChange(this))
   def getSyntheticImplicitMethod: Option[ScFunction] = {
     if (hasModifierProperty("implicit")) {
       constructor match {

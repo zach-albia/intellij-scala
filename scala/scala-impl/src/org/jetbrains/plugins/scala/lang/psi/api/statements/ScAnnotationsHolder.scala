@@ -26,7 +26,7 @@ import org.jetbrains.plugins.scala.macroAnnotations._
 
 trait ScAnnotationsHolder extends ScalaPsiElement with PsiAnnotatedAdapter {
 
-  @Cached(DropOn.anyScalaPsiChange, this)
+  @Cached(DropOn.anyScalaPsiChange)
   def annotations: Seq[ScAnnotation] = this.stubOrPsiChild(ScalaElementTypes.ANNOTATIONS) match {
     case Some(ann) => ann.getAnnotations.toSeq
     case _ => Seq.empty
