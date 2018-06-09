@@ -51,9 +51,6 @@ object CachedInUserData {
 
         //generated names
         val keyId = c.freshName(name.toString + "cacheKey")
-        val cacheStatsName = TermName(c.freshName("cacheStats"))
-        val analyzeCaches = CachedMacroUtil.analyzeCachesEnabled(c)
-        val defdefFQN = q"""getClass.getName ++ "." ++ ${name.toString}"""
         val elemName = generateTermName("element")
         val dataName = generateTermName("data")
         val keyVarName = generateTermName("key")
@@ -77,19 +74,17 @@ object CachedInUserData {
           else q"$holderName.compareAndSet(null, $resultName)"
 
 
-        val actualCalculation = withUIFreezingGuard(c) {
-          transformRhsToAnalyzeCaches(c)(cacheStatsName, retTp, rhs)
-        }
+        val hasReturnStmts = hasReturnStatements(c)(rhs)
+        val withUIGuard = withUIFreezingGuard(c)(rhs)
 
-        val analyzeCachesEnterCacheArea =
-          if (analyzeCaches) q"$cacheStatsName.aboutToEnterCachedArea()"
-          else EmptyTree
+        val cachedFun =
+          if (hasReturnStmts) q"def $cachedFunName(): $retTp = $withUIGuard" else EmptyTree
 
-        val computation = if (hasReturnStatements(c)(actualCalculation)) q"$cachedFunName()" else q"$actualCalculation"
+        val computation =
+          if (hasReturnStmts) q"$cachedFunName()" else q"$withUIGuard"
 
         val updatedRhs = q"""
-          def $cachedFunName(): $retTp = $actualCalculation
-          ..$analyzeCachesEnterCacheArea
+          ..$cachedFun
 
           val $dataName = $dataValue
           val $keyVarName = ${getOrCreateKey(c, hasParams)(q"$keyId", dataType, resultType)}
@@ -101,7 +96,7 @@ object CachedInUserData {
 
           val stackStamp = $recursionManagerFQN.markStack()
 
-          val $resultName = $computation
+          val $resultName: $retTp = $computation
 
           if (stackStamp.mayCacheNow()) {
             $updateHolder
@@ -110,13 +105,8 @@ object CachedInUserData {
           $resultName
           """
         val updatedDef = DefDef(mods, name, tpParams, paramss, retTp, updatedRhs)
-        val res = q"""
-          ${if (analyzeCaches) q"private val $cacheStatsName = $cacheStatisticsFQN($keyId, $defdefFQN)" else EmptyTree}
 
-          ..$updatedDef
-          """
-        println(res)
-        c.Expr(res)
+        c.Expr(q"..$updatedDef")
       case _ => abort("You can only annotate one function!")
     }
   }

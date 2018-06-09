@@ -53,9 +53,6 @@ object CachedWithRecursionGuard {
 
         //generated names
         val keyId = c.freshName(name.toString + "cacheKey")
-        val cacheStatsName = TermName(c.freshName("cacheStats"))
-        val analyzeCaches = CachedMacroUtil.analyzeCachesEnabled(c)
-        val defdefFQN = q"""getClass.getName ++ "." ++ ${name.toString}"""
         val computedValue = generateTermName("computedValue")
         val guard = generateTermName("guard")
         val defValueName = generateTermName("defaultValue")
@@ -89,13 +86,10 @@ object CachedWithRecursionGuard {
           if (hasParams) q"($elemName, $dataName)"
           else q"$elemName"
 
-        val actualCalculation = transformRhsToAnalyzeCaches(c)(cacheStatsName, retTp, rhs)
-        val guardedCalculation = withUIFreezingGuard(c)(q"$computedValue = $actualCalculation")
+        val guardedCalculation = withUIFreezingGuard(c)(q"$computedValue = $rhs")
         val withProbablyRecursiveException = handleProbablyRecursiveException(c)(elemName, dataName, keyVarName, guardedCalculation)
 
         val updatedRhs = q"""
-          ${if (analyzeCaches) q"$cacheStatsName.aboutToEnterCachedArea()" else EmptyTree}
-
           val $elemName = $element
           val $dataName = $dataValue
           val $dataForGuardName = $dataForRecursionGuard
@@ -128,12 +122,7 @@ object CachedWithRecursionGuard {
           else $resultName
           """
         val updatedDef = DefDef(mods, name, tpParams, paramss, retTp, updatedRhs)
-        val res = q"""
-          ${if (analyzeCaches) q"private val $cacheStatsName = $cacheStatisticsFQN($keyId, $defdefFQN)" else EmptyTree}
-
-          ..$updatedDef
-          """
-        println(res)
+        val res = q"..$updatedDef"
         c.Expr(res)
       case _ => abort("You can only annotate one function!")
     }
