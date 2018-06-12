@@ -41,9 +41,8 @@ object Cached {
           abort("You must specify return type")
         }
         //generated names
-        val cachedFunName      = generateTermName(name.toString + "$cachedFun")
-        val mapAndCounterRef   = generateTermName(name.toString + "$mapAndCounter")
-        val timestampedDataRef = generateTermName(name.toString + "$valueAndCounter")
+        val cachedFunName = generateTermName(name.toString + "$original")
+        val cacheField = generateTermName(name.toString + "$cache")
 
         //DefDef parameters
         val flatParams = paramss.flatten
@@ -58,83 +57,66 @@ object Cached {
         val computation =
           if (hasReturnStmts) q"$cachedFunName()" else q"$rhs"
 
-        val (fields, updatedRhs) = if (hasParameters) {
-          //wrap type of value in Some to avoid unboxing in putIfAbsent for primitive types
-          val mapType = tq"$concurrentMapTypeFqn[(..${flatParams.map(_.tpt)}), _root_.scala.Some[$retTp]]"
+        val (field, updatedRhs) = if (hasParameters) {
+          val paramTypes = flatParams.map(_.tpt)
+          val keyType =  tq"(..$paramTypes)"
 
-          def createNewMap = q"_root_.com.intellij.util.containers.ContainerUtil.newConcurrentMap()"
-
-          val fields = q"""
-              new _root_.scala.volatile()
-              private val $mapAndCounterRef: $atomicReferenceTypeFQN[$timestampedTypeFQN[$mapType]] =
-                new $atomicReferenceTypeFQN($timestampedFQN(null, -1L))
-            """
+          val field =
+            q"private val $cacheField: $atomicStampedMapTypeFQN[$keyType, $retTp] = $atomicStampedMapFQN[$keyType, $retTp]"
 
           def updatedRhs = q"""
              ..$cachedFun
 
              val currModCount = $modTracker.getModificationCount()
 
-             val map = {
-               val timestampedMap = $mapAndCounterRef.get
-               if (timestampedMap.modCount < currModCount) {
-                 $mapAndCounterRef.compareAndSet(timestampedMap, $timestampedFQN($createNewMap, currModCount))
-               }
-               $mapAndCounterRef.get.data
-             }
-
              val key = (..$paramNames)
 
-             map.get(key) match {
+             $cacheField.getOrClear(currModCount, key) match {
                case Some(v) => v
-               case null =>
+               case None =>
                  val stackStamp = $recursionManagerFQN.markStack()
 
-                 //null values are not allowed in ConcurrentHashMap, but we want to cache nullable functions
-                 val computed: Some[$retTp] = _root_.scala.Some($computation)
+                 val computed: $retTp = $computation
 
                  if (stackStamp.mayCacheNow()) {
-                   val race = map.putIfAbsent(key, computed)
-                   if (race != null) race.get
-                   else computed.get
+                   $cacheField.compareAndPut(currModCount, key, computed)
+                   computed
                  }
-                 else computed.get
+                 else computed
              }
           """
-          (fields, updatedRhs)
+          (field, updatedRhs)
         } else {
-          val fields = q"""
-              new _root_.scala.volatile()
-              private val $timestampedDataRef: $atomicReferenceTypeFQN[$timestampedTypeFQN[$retTp]] =
-                new $atomicReferenceTypeFQN($timestampedFQN(${defaultValue(c)(retTp)}, -1L))
-            """
+          val field =
+            q"private val $cacheField: $atomicStampedRefTypeFQN[$retTp] = $atomicStampedRefFQN[$retTp]"
 
           val updatedRhs =
             q"""
                ..$cachedFun
 
                val currModCount = $modTracker.getModificationCount()
+               val timestamped = $cacheField.timestamped
+               val cachedCount = timestamped.modCount
 
-               val timestamped = $timestampedDataRef.get
-               if (timestamped.modCount == currModCount) timestamped.data
+               if (cachedCount == currModCount) timestamped.data
                else {
                  val stackStamp = $recursionManagerFQN.markStack()
 
                  val computed: $retTp = $computation
 
                  if (stackStamp.mayCacheNow()) {
-                   $timestampedDataRef.compareAndSet(timestamped, $timestampedFQN(computed, currModCount))
-                   $timestampedDataRef.get.data
+                   $cacheField.compareAndSet(cachedCount, currModCount, computed)
+                   computed
                  }
                  else computed
                }
              """
-          (fields, updatedRhs)
+          (field, updatedRhs)
         }
 
         val updatedDef = DefDef(mods, name, tpParams, paramss, retTp, updatedRhs)
         val res = q"""
-          ..$fields
+          ..$field
           $updatedDef
           """
         c.Expr(res)

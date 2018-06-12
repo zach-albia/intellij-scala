@@ -23,19 +23,29 @@ object CachedMacroUtil {
     q"_root_.org.jetbrains.plugins.scala.caches.CachesUtil"
   }
 
-  def timestampedFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    q"_root_.org.jetbrains.plugins.scala.caches.CachesUtil.Timestamped"
-  }
-
-  def timestampedTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    tq"_root_.org.jetbrains.plugins.scala.caches.CachesUtil.Timestamped"
-  }
-
   def atomicReferenceTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
     import c.universe.Quasiquote
     tq"_root_.java.util.concurrent.atomic.AtomicReference"
+  }
+
+  def atomicStampedRefTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    tq"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedRef"
+  }
+
+  def atomicStampedRefFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    q"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedRef"
+  }
+
+  def atomicStampedMapTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    tq"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedMap"
+  }
+
+  def atomicStampedMapFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    q"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedMap"
   }
 
   def defaultValue(c: whitebox.Context)(tp: c.universe.Tree): c.universe.Tree = {
