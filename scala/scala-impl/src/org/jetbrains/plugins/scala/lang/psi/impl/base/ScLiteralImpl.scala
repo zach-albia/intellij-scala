@@ -17,6 +17,8 @@ import com.intellij.psi.impl.source.tree.LeafElement
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil
 import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl
 import com.intellij.psi.util.PsiModificationTracker
+import org.jetbrains.plugins.scala.caches
+import org.jetbrains.plugins.scala.caches.DropOn
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaElementVisitor
 import org.jetbrains.plugins.scala.lang.psi.api.base.{ScInterpolatedStringLiteral, ScLiteral}
@@ -49,7 +51,7 @@ class ScLiteralImpl(node: ASTNode) extends ScalaPsiElementImpl(node) with ScLite
     }
   }
 
-  @CachedInUserData(this, PsiModificationTracker.MODIFICATION_COUNT)
+  @CachedInUserData(this, DropOn.anyPhysicalPsiChange(getProject))
   def getValue: AnyRef = {
     val child = getFirstChild.getNode
     var text = getText

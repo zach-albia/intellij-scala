@@ -42,7 +42,7 @@ object Cached {
         }
         //generated names
         val cachedFunName = generateTermName(name.toString + "$original")
-        val cacheField = generateTermName(name.toString + "$cache")
+        val cacheFieldName = generateTermName(name.toString + "$cache")
 
         //DefDef parameters
         val flatParams = paramss.flatten
@@ -62,61 +62,30 @@ object Cached {
           val keyType =  tq"(..$paramTypes)"
 
           val field =
-            q"private val $cacheField: $atomicStampedMapTypeFQN[$keyType, $retTp] = $atomicStampedMapFQN[$keyType, $retTp]"
+            q"private val $cacheFieldName: $atomicStampedMapTypeFQN[$keyType, $retTp] = $atomicStampedMapFQN[$keyType, $retTp]"
 
           def updatedRhs = q"""
              ..$cachedFun
 
-             val currModCount = $modTracker.getModificationCount()
-
-             val key = (..$paramNames)
-
-             $cacheField.getOrClear(currModCount, key) match {
-               case Some(v) => v
-               case None =>
-                 val stackStamp = $recursionManagerFQN.markStack()
-
-                 val computed: $retTp = $computation
-
-                 if (stackStamp.mayCacheNow()) {
-                   $cacheField.compareAndPut(currModCount, key, computed)
-                   computed
-                 }
-                 else computed
-             }
+             ${getFromStampedMapOrCompute(c)(q"$cacheFieldName", modTracker, computation, retTp, paramNames)}
           """
           (field, updatedRhs)
         } else {
           val field =
-            q"private val $cacheField: $atomicStampedRefTypeFQN[$retTp] = $atomicStampedRefFQN[$retTp]"
+            q"private val $cacheFieldName: $atomicStampedRefTypeFQN[$retTp] = $atomicStampedRefFQN[$retTp]"
 
           val updatedRhs =
             q"""
                ..$cachedFun
 
-               val currModCount = $modTracker.getModificationCount()
-               val timestamped = $cacheField.timestamped
-               val cachedCount = timestamped.modCount
-
-               if (cachedCount == currModCount) timestamped.data
-               else {
-                 val stackStamp = $recursionManagerFQN.markStack()
-
-                 val computed: $retTp = $computation
-
-                 if (stackStamp.mayCacheNow()) {
-                   $cacheField.compareAndSet(cachedCount, currModCount, computed)
-                   computed
-                 }
-                 else computed
-               }
+               ${getFromStampedRefOrCompute(c)(q"$cacheFieldName", modTracker, computation, retTp)}
              """
           (field, updatedRhs)
         }
 
         val updatedDef = DefDef(mods, name, tpParams, paramss, retTp, updatedRhs)
         val res = q"""
-          ..$field
+          $field
           $updatedDef
           """
         c.Expr(res)

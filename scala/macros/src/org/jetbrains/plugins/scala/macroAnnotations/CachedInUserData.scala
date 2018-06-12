@@ -51,28 +51,14 @@ object CachedInUserData {
 
         //generated names
         val keyId = c.freshName(name.toString + "cacheKey")
-        val elemName = generateTermName("element")
-        val dataName = generateTermName("data")
-        val keyVarName = generateTermName("key")
-        val holderName = generateTermName("holder")
-        val resultName = generateTermName("result")
-        val cachedFunName = generateTermName(name.toString + "cachedFun")
+        val cachedFunName = generateTermName(name.toString + "$original")
 
-        val dataValue = if (hasParams) q"(..$parameterNames)" else q"()"
+        val key = getOrCreateKeyStamped(c, hasParams)(keyId, dataType, resultType)
         val getOrCreateCachedHolder =
           if (hasParams)
-            q"$cachesUtilFQN.getOrCreateCachedMap[$elemName.type, $dataType, $resultType]($elemName, $keyVarName, () => $modTracker)"
+            q"$cachesUtilFQN.getOrCreateStampedMap[$dataType, $resultType]($elem, $key)"
           else
-            q"$cachesUtilFQN.getOrCreateCachedRef[$elemName.type, $resultType]($elemName, $keyVarName, () => $modTracker)"
-
-        val getFromHolder =
-          if (hasParams) q"$holderName.get($dataName)"
-          else q"$holderName.get()"
-
-        val updateHolder =
-          if (hasParams) q"$holderName.putIfAbsent($dataName, $resultName)"
-          else q"$holderName.compareAndSet(null, $resultName)"
-
+            q"$cachesUtilFQN.getOrCreateStampedRef[$resultType]($elem, $key)"
 
         val hasReturnStmts = hasReturnStatements(c)(rhs)
         val withUIGuard = withUIFreezingGuard(c)(rhs)
@@ -83,26 +69,17 @@ object CachedInUserData {
         val computation =
           if (hasReturnStmts) q"$cachedFunName()" else q"$withUIGuard"
 
+        val getFromCacheOrCompute =
+          if (hasParams)
+            getFromStampedMapOrCompute(c)(getOrCreateCachedHolder, modTracker, computation, resultType, parameterNames)
+          else
+            getFromStampedRefOrCompute(c)(getOrCreateCachedHolder, modTracker, computation, resultType)
+
+
         val updatedRhs = q"""
           ..$cachedFun
 
-          val $dataName = $dataValue
-          val $keyVarName = ${getOrCreateKey(c, hasParams)(q"$keyId", dataType, resultType)}
-          val $elemName = $elem
-
-          val $holderName = $getOrCreateCachedHolder
-          val fromCachedHolder = $getFromHolder
-          if (fromCachedHolder != null) return fromCachedHolder
-
-          val stackStamp = $recursionManagerFQN.markStack()
-
-          val $resultName: $retTp = $computation
-
-          if (stackStamp.mayCacheNow()) {
-            $updateHolder
-          }
-
-          $resultName
+          $getFromCacheOrCompute
           """
         val updatedDef = DefDef(mods, name, tpParams, paramss, retTp, updatedRhs)
 

@@ -10,7 +10,7 @@ import com.intellij.openapi.util._
 import com.intellij.psi._
 import com.intellij.psi.impl.compiled.ClsFileImpl
 import com.intellij.psi.util._
-import com.intellij.util.containers.{ContainerUtil, Stack}
+import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.plugins.scala.caches.ProjectUserDataHolder._
 import org.jetbrains.plugins.scala.debugger.evaluation.ScalaCodeFragment
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaFile
@@ -20,6 +20,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinitio
 import org.jetbrains.plugins.scala.lang.psi.impl.ScPackageImpl.{DoNotProcessPackageObjectException, isPackageObjectProcessing}
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
 import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveResult
+import org.jetbrains.plugins.scala.project.UserDataHolderExt
 
 import scala.annotation.tailrec
 import scala.util.control.ControlThrowable
@@ -145,6 +146,12 @@ object CachesUtil {
     }
     cachedValue.getValue
   }
+
+  def getOrCreateStampedRef[V](elem: UserDataHolder, key: Key[AtomicStampedRef[V]]): AtomicStampedRef[V] =
+    elem.getOrUpdateUserData(key, AtomicStampedRef[V])
+
+  def getOrCreateStampedMap[K, V](elem: UserDataHolder, key: Key[AtomicStampedMap[K, V]]): AtomicStampedMap[K, V] =
+    elem.getOrUpdateUserData(key, AtomicStampedMap[K, V])
 
   //used in CachedWithRecursionGuard
   def handleRecursiveCall[Data, Result](e: PsiElement, data: Data, key: Key[_], defaultValue: => Result): Result = {

@@ -23,11 +23,6 @@ object CachedMacroUtil {
     q"_root_.org.jetbrains.plugins.scala.caches.CachesUtil"
   }
 
-  def atomicReferenceTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    tq"_root_.java.util.concurrent.atomic.AtomicReference"
-  }
-
   def atomicStampedRefTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
     import c.universe.Quasiquote
     tq"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedRef"
@@ -73,11 +68,6 @@ object CachedMacroUtil {
     tq"_root_.com.intellij.openapi.util.Key"
   }
 
-  def cacheStatisticsFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    q"_root_.org.jetbrains.plugins.scala.statistics.CacheStatistics"
-  }
-
   def recursionGuardFQN(implicit c: whitebox.Context): c.universe.Tree = {
     import c.universe.Quasiquote
     q"org.jetbrains.plugins.scala.caches.RecursionManager.RecursionGuard"
@@ -88,27 +78,10 @@ object CachedMacroUtil {
     q"org.jetbrains.plugins.scala.caches.RecursionManager"
   }
 
-
-  def psiModificationTrackerFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    q"_root_.com.intellij.psi.util.PsiModificationTracker"
-  }
-
   def psiElementType(implicit c: whitebox.Context): c.universe.Tree = {
     import c.universe.Quasiquote
     tq"_root_.com.intellij.psi.PsiElement"
   }
-
-  def scalaPsiManagerFQN(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    q"_root_.org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiManager"
-  }
-
-  def concurrentMapTypeFqn(implicit c: whitebox.Context): c.universe.Tree = {
-    import c.universe.Quasiquote
-    tq"_root_.java.util.concurrent.ConcurrentMap"
-  }
-
 
   def thisFunctionFQN(name: String)(implicit c: whitebox.Context): c.universe.Tree = {
     import c.universe.Quasiquote
@@ -227,6 +200,76 @@ object CachedMacroUtil {
 
     if (hasParams) q"$cachesUtilFQN.getOrCreateKey[$cachesUtilFQN.CachedMap[$dataType, $resultType]]($keyId)"
     else q"$cachesUtilFQN.getOrCreateKey[$cachesUtilFQN.CachedRef[$resultType]]($keyId)"
+  }
+
+  def getOrCreateKeyStamped(c: whitebox.Context, hasParams: Boolean)
+                    (keyId: String, dataType: c.universe.Tree, resultType: c.universe.Tree)
+                    (implicit c1: c.type): c.universe.Tree = {
+
+    import c.universe.Quasiquote
+
+    if (hasParams) q"$cachesUtilFQN.getOrCreateKey[$atomicStampedMapTypeFQN[$dataType, $resultType]]($keyId)"
+    else           q"$cachesUtilFQN.getOrCreateKey[$atomicStampedRefTypeFQN[$resultType]]($keyId)"
+  }
+
+  def getFromStampedMapOrCompute(c: whitebox.Context)
+                                (cacheHolder: c.universe.Tree,
+                                 modTracker: c.universe.Tree,
+                                 computation: c.universe.Tree,
+                                 returnType: c.universe.Tree,
+                                 paramNames: Seq[c.universe.TermName]): c.universe.Tree = {
+
+    import c.universe.Quasiquote
+    implicit val ctx: c.type = c
+
+    q"""
+        val currModCount = $modTracker.getModificationCount()
+
+        val key = (..$paramNames)
+
+        $cacheHolder.getOrClear(currModCount, key) match {
+          case Some(v) => v
+          case None =>
+            val stackStamp = $recursionManagerFQN.markStack()
+
+            val computed: $returnType = $computation
+
+            if (stackStamp.mayCacheNow()) {
+              $cacheHolder.compareAndPut(currModCount, key, computed)
+              computed
+            }
+            else computed
+        }"""
+
+  }
+
+  def getFromStampedRefOrCompute(c: whitebox.Context)
+                                (cacheHolder: c.universe.Tree,
+                                 modTracker: c.universe.Tree,
+                                 computation: c.universe.Tree,
+                                 returnType: c.universe.Tree): c.universe.Tree = {
+
+    import c.universe.Quasiquote
+    implicit val ctx: c.type = c
+
+    q"""
+        val currModCount = $modTracker.getModificationCount()
+        val timestamped = $cacheHolder.timestamped
+        val cachedCount = timestamped.modCount
+
+        if (cachedCount == currModCount) timestamped.data
+        else {
+          val stackStamp = $recursionManagerFQN.markStack()
+
+          val computed: $returnType = $computation
+
+          if (stackStamp.mayCacheNow()) {
+            $cacheHolder.compareAndSet(cachedCount, currModCount, computed)
+            computed
+          }
+          else computed
+        }"""
+
   }
 
 }

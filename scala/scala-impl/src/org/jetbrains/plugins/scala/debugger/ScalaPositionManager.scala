@@ -21,7 +21,7 @@ import com.intellij.util.{Processor, Query}
 import com.sun.jdi._
 import com.sun.jdi.request.ClassPrepareRequest
 import org.jetbrains.annotations.{NotNull, Nullable}
-import org.jetbrains.plugins.scala.caches.ScalaShortNamesCacheManager
+import org.jetbrains.plugins.scala.caches.{DropOn, ScalaShortNamesCacheManager}
 import org.jetbrains.plugins.scala.debugger.ScalaPositionManager._
 import org.jetbrains.plugins.scala.debugger.evaluation.ScalaEvaluatorBuilderUtil
 import org.jetbrains.plugins.scala.debugger.evaluation.evaluator.ScalaCompilingEvaluator
@@ -714,8 +714,7 @@ object ScalaPositionManager {
   }
 
   def positionsOnLine(file: PsiFile, lineNumber: Int): Seq[PsiElement] = {
-    //stored in `file`, invalidated on `file` change
-    @CachedInUserData(file, file)
+    @CachedInUserData(file, DropOn.anyPhysicalPsiChange(file.getProject))
     def cachedMap: ConcurrentIntObjectMap[Seq[PsiElement]] = ContainerUtil.createConcurrentIntObjectMap()
 
     if (lineNumber < 0) return Seq.empty
