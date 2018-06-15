@@ -64,9 +64,9 @@ trait ScReferenceElement extends ScalaPsiElement with PsiPolyVariantReference {
   def getRangeInElement: TextRange = {
     val start = nameId.getTextRange.getStartOffset - getTextRange.getStartOffset
     val len = getTextLength
-    if (isBackQuoted && patternNeedBackticks(refName.drop(1).dropRight(1)))
-      new TextRange(start + 1, len - 1)
-    else
+//    if (isBackQuoted && patternNeedBackticks(refName.drop(1).dropRight(1)))
+//      new TextRange(start + 1, len - 1)
+//    else
       new TextRange(start, len)
   }
 
