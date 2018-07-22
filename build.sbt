@@ -326,6 +326,9 @@ lazy val repackagedZinc =
   newProject("repackagedZinc", file("target/tools/zinc"))
   .settings(
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false),
+    assemblyShadeRules in assembly := Seq(
+      ShadeRule.rename("com.google.protobuf.**" -> "zinc.protobuf.@1").inAll
+    ),
     libraryDependencies += Dependencies.zinc,
     ideSkipProject := true
   )
