@@ -9,7 +9,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.psi.PsiClass
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import com.intellij.testFramework.{CompilerTester, PsiTestUtil}
-import junit.framework.TestCase._
+import junit.framework.Assert._
 import org.jetbrains.plugins.scala.SlowTests
 import org.jetbrains.plugins.scala.base.libraryLoaders.{LibraryLoader, ScalaSDKLoader}
 import org.jetbrains.plugins.scala.debugger.{ScalaSdkOwner, ScalaVersion, Scala_2_12}
@@ -39,7 +39,7 @@ abstract class ScalaCompilerReferenceServiceFixture extends JavaCodeInsightFixtu
     try {
       setUpLibraries()
       PsiTestUtil.addSourceRoot(myModule, myFixture.getTempDirFixture.findOrCreateDir("src"), true)
-      compiler = new CompilerTester(getProject, util.Collections.singletonList(myModule))
+      compiler = new CompilerTester(myModule)
     } catch {
       case NonFatal(e) => fail(e.getMessage)
     }

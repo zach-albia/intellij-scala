@@ -1,7 +1,6 @@
 package org.jetbrains.plugins.scala.findUsages.compilerReferences
 
 import com.intellij.psi.PsiElement
-import junit.framework.TestCase.fail
 import org.jetbrains.plugins.scala.util.ImplicitUtil.ImplicitSearchTarget
 import org.junit.Assert._
 
@@ -84,13 +83,13 @@ class CompilerServiceUsagesTest extends ScalaCompilerReferenceServiceFixture {
 
     buildProject()
     val target = implicitSearchTargetAtCaret
-    val scope = service.dirtyScopeForDefinition(target)
+    val scope = service.getDirtyScopeHolder
     Seq(fileA, fileB).foreach(f => assertFalse(scope.contains(f.getVirtualFile)))
     val usages = service.usagesOf(target, filterScope = true)
     assertTrue("Unexpected empty usages.", usages.nonEmpty)
     myFixture.openFileInEditor(fileB.getVirtualFile)
     myFixture.`type`("/* bla-bla-bla */")
-    val scope2 = service.dirtyScopeForDefinition(target)
+    val scope2 = service.getDirtyScopeHolder
     Seq(fileA, fileB).foreach(f => assertTrue(scope2.contains(f.getVirtualFile)))
     val usages2 = service.usagesOf(target, filterScope = true)
     assertTrue("Should not return usages from dirty scope.", usages2.isEmpty)
