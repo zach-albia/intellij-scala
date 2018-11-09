@@ -1,6 +1,5 @@
 package org.jetbrains.plugins.scala.findUsages.compilerReferences
 
-import java.util
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.{Condition, Lock, ReentrantLock}
 
@@ -37,6 +36,7 @@ abstract class ScalaCompilerReferenceServiceFixture extends JavaCodeInsightFixtu
   override def setUp(): Unit = {
     super.setUp()
     try {
+      ScalaCompilerReferenceService(project).init()
       setUpLibraries()
       PsiTestUtil.addSourceRoot(myModule, myFixture.getTempDirFixture.findOrCreateDir("src"), true)
       compiler = new CompilerTester(myModule)

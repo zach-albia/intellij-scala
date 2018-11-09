@@ -155,6 +155,10 @@ private[findUsages] class ScalaCompilerReferenceService(
     }
 
   override def projectOpened(): Unit = if (CompilerIndicesSettings(project).indexingEnabled) {
+    init()
+  }
+
+  def init(): Unit = {
     new JpsCompilationWatcher(project, transactionManager).start()
     new SbtCompilationWatcher(project, transactionManager, readerFactory.expectedIndexVersion()).start()
 
