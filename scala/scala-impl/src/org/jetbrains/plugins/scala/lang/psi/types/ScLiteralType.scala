@@ -17,8 +17,12 @@ import org.jetbrains.plugins.scala.project.ProjectContext
 
 import scala.reflect.ClassTag
 
-class ScLiteralType private(val literalValue: Any, val kind: ScLiteralType.Kind, val allowWiden: Boolean = true)
-                           (implicit val projectContext: ProjectContext) extends ValueType with LeafType {
+class ScLiteralType private (
+  val literalValue:            Any,
+  val kind:                    ScLiteralType.Kind,
+  val allowWiden:              Boolean = true
+)(implicit val projectContext: ProjectContext)
+    extends ValueType with LeafType {
 
   override def visitType(visitor: TypeVisitor): Unit = visitor.visitLiteralType(this)
 
@@ -40,54 +44,49 @@ class ScLiteralType private(val literalValue: Any, val kind: ScLiteralType.Kind,
   private def valueFromKind: Any = {
     import ScLiteralType.Kind._
     kind match {
-      case String => valueAs[String]
-      case Symbol => valueAs[Symbol]
+      case String  => valueAs[String]
+      case Symbol  => valueAs[Symbol]
       case Boolean => valueAs[Boolean]
-      case Int => valueAs[Int]
-      case Long => valueAs[Long]
-      case Float => valueAs[Float]
-      case Double => valueAs[Double]
-      case Char => valueAs[Char]
+      case Int     => valueAs[Int]
+      case Long    => valueAs[Long]
+      case Float   => valueAs[Float]
+      case Double  => valueAs[Double]
+      case Char    => valueAs[Char]
     }
   }
+
+  def get: Any         = literalValue
+  def isEmpty: Boolean = false
 }
 
 object ScLiteralType {
+  def unapply(tpe: ScLiteralType): ScLiteralType = tpe
 
   import LiteralEvaluationUtil._
 
-  sealed class Kind
+  sealed trait Kind
 
   object Kind {
-
     case object Boolean extends Kind
-
-    case object String extends Kind
-
-    case object Symbol extends Kind
-
-    case object Int extends Kind
-
-    case object Long extends Kind
-
-    case object Float extends Kind
-
-    case object Double extends Kind
-
-    case object Char extends Kind
-
+    case object String  extends Kind
+    case object Symbol  extends Kind
+    case object Int     extends Kind
+    case object Long    extends Kind
+    case object Float   extends Kind
+    case object Double  extends Kind
+    case object Char    extends Kind
   }
 
-  private def fromValue(literalValue: Any)(implicit projectContext: ProjectContext): Option[ScLiteralType] = literalValue match {
+  def fromValue(literalValue: Any)(implicit projectContext: ProjectContext): Option[ScLiteralType] = literalValue match {
     case _: Boolean => Some(apply(literalValue, Kind.Boolean))
-    case _: String => Some(apply(literalValue, Kind.String))
-    case _: Symbol => Some(apply(literalValue, Kind.Symbol))
-    case _: Int => Some(apply(literalValue, Kind.Int))
-    case _: Long => Some(apply(literalValue, Kind.Long))
-    case _: Float => Some(apply(literalValue, Kind.Float))
-    case _: Double => Some(apply(literalValue, Kind.Double))
-    case _: Char => Some(apply(literalValue, Kind.Char))
-    case _ => None
+    case _: String  => Some(apply(literalValue, Kind.String))
+    case _: Symbol  => Some(apply(literalValue, Kind.Symbol))
+    case _: Int     => Some(apply(literalValue, Kind.Int))
+    case _: Long    => Some(apply(literalValue, Kind.Long))
+    case _: Float   => Some(apply(literalValue, Kind.Float))
+    case _: Double  => Some(apply(literalValue, Kind.Double))
+    case _: Char    => Some(apply(literalValue, Kind.Char))
+    case _          => None
   }
 
   def apply(literalValue: Any, kind: Kind)(implicit projectContext: ProjectContext): ScLiteralType =
@@ -125,13 +124,13 @@ object ScLiteralType {
 
     kind match {
       case Kind.Boolean => api.Boolean
-      case Kind.String => getCachedClass("java.lang.String")
-      case Kind.Symbol => getCachedClass("scala.Symbol")
-      case Kind.Int => api.Int
-      case Kind.Long => api.Long
-      case Kind.Float => api.Float
-      case Kind.Double => api.Double
-      case Kind.Char => api.Char
+      case Kind.String  => getCachedClass("java.lang.String")
+      case Kind.Symbol  => getCachedClass("scala.Symbol")
+      case Kind.Int     => api.Int
+      case Kind.Long    => api.Long
+      case Kind.Float   => api.Float
+      case Kind.Double  => api.Double
+      case Kind.Char    => api.Char
     }
   }
 
@@ -153,7 +152,7 @@ object ScLiteralType {
     case _ => false
   }
 
-  def isNumeric(kind: Kind) =
+  def isNumeric(kind: Kind): Boolean =
     isInteger(kind) || kind == Kind.Float || kind == Kind.Double
 
   def widenRecursive(aType: ScType): ScType = {
@@ -195,12 +194,12 @@ object ScLiteralType {
       if (name == "unary_+") Some(arg)
       else if (name == "unary_-") {
         kind match {
-          case Kind.Int => Some(ScLiteralType(-arg.valueAs[Int], kind))
-          case Kind.Long => Some(ScLiteralType(-arg.valueAs[Long], kind))
-          case Kind.Float => Some(ScLiteralType(-arg.valueAs[Float], kind))
+          case Kind.Int    => Some(ScLiteralType(-arg.valueAs[Int], kind))
+          case Kind.Long   => Some(ScLiteralType(-arg.valueAs[Long], kind))
+          case Kind.Float  => Some(ScLiteralType(-arg.valueAs[Float], kind))
           case Kind.Double => Some(ScLiteralType(-arg.valueAs[Double], kind))
-          case Kind.Char => Some(ScLiteralType(-arg.valueAs[Char], kind))
-          case _ => None
+          case Kind.Char   => Some(ScLiteralType(-arg.valueAs[Char], kind))
+          case _           => None
         }
       } else None
     } else None

@@ -353,8 +353,14 @@ object ScSimpleTypeElementImpl {
         (constr.containingClass, r.fromType)
       case Some(ScalaResolveResult(MacroDef(f), _)) =>
         val macroEvaluator = ScalaMacroEvaluator.getInstance(f.getProject)
-        val typeFromMacro = macroEvaluator.checkMacro(f, MacroContext(ref, None))
-        return typeFromMacro.map(Right(_)).getOrElse(Failure("Unknown macro in type position"))
+        val macroResult = macroEvaluator.checkMacro(f, MacroContext(ref, None))
+
+        val typeFromMacro = macroResult match {
+          case Right(tpe) => Right(tpe)
+          case _          => Failure("Unknown macro in type position.")
+        }
+
+        return typeFromMacro
       case Some(r@ScalaResolveResult(n: PsiNamedElement, _)) => (n, r.fromType)
       case _ => return Failure("Cannot resolve reference")
     }

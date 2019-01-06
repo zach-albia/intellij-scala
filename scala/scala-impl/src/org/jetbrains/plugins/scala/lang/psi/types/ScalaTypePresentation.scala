@@ -315,7 +315,7 @@ trait ScalaTypePresentation extends api.TypePresentation {
       case mt@ScMethodType(retType, params, _) =>
         implicit val elementScope: ElementScope = mt.elementScope
         innerTypeText(FunctionType(retType, params.map(_.paramType)), needDotType)
-      case lit: ScLiteralType => ScLiteralType.printValue(lit)
+      case lit: ScLiteralType => s"${lit.kind}(${ScLiteralType.printValue(lit)})"
       case _ => "" //todo
     }
 

@@ -7,7 +7,7 @@ import com.intellij.psi._
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.plugins.scala.caches.RecursionManager
 import org.jetbrains.plugins.scala.extensions._
-import org.jetbrains.plugins.scala.lang.macros.evaluator.{MacroContext, ScalaMacroEvaluator}
+import org.jetbrains.plugins.scala.lang.macros.evaluator.{MacroContext, MacroEvaluationError, ScalaMacroEvaluator}
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil.strictlyOrderedByContext
 import org.jetbrains.plugins.scala.lang.psi.api.InferUtil
@@ -330,7 +330,7 @@ class ImplicitCollector(place: PsiElement,
               val notMoreSpecific = mostSpecificUtil.notMoreSpecificThan(r)
               filteredCandidates = filteredCandidates.filter(notMoreSpecific)
               //this filter was added to make result deterministic
-              results = results.filter(c => notMoreSpecific(c))
+              results = results.filter(notMoreSpecific)
               results += r
             }
           }
@@ -455,9 +455,8 @@ class ImplicitCollector(place: PsiElement,
         val updated = updateNonValueType(nonValueType0)
 
         if (hadDependents) UndefinedType.revertDependentTypes(updated)
-        else updated
-      }
-      catch {
+        else               updated
+      } catch {
         case _: SafeCheckException => return wrongTypeParam(CantInferTypeParameterResult)
       }
 
@@ -502,8 +501,15 @@ class ImplicitCollector(place: PsiElement,
     def compute(): Option[ScalaResolveResult] = {
       val typeParameters = fun.typeParameters
       val implicitClause = fun.effectiveParameterClauses.lastOption.filter(_.isImplicit)
-      if (typeParameters.isEmpty && implicitClause.isEmpty) Some(c.copy(implicitReason = OkResult))
-      else {
+
+      if (typeParameters.isEmpty && implicitClause.isEmpty) {
+        Option(
+          c.copy(
+            implicitParameterType = Option(ret), // me might have stepped on a whitebox macro along the way
+            implicitReason        = OkResult
+          )
+        )
+      } else {
         val methodType = implicitClause.map {
           li => ScMethodType(ret, li.getSmartParameters, isImplicit = true)(place.elementScope)
         }.fold(ret)(subst)
@@ -562,44 +568,54 @@ class ImplicitCollector(place: PsiElement,
     withLocalTypeInference: Boolean,
     checkFast:              Boolean
   ): Option[ScalaResolveResult] = {
-    val fun = c.element.asInstanceOf[ScFunction]
+    val fun   = c.element.asInstanceOf[ScFunction]
     val subst = c.substitutor
+    val ft    = functionTypeNoImplicits(fun)
 
-    val ft = functionTypeNoImplicits(fun)
+    def checkFunctionByTypeInner(funType: ScType, hadDependents: Boolean): Option[ScalaResolveResult] =
+      if (isExtensionConversion && argsConformWeakly(funType, tp) || funType.conforms(tp)) {
+        if (checkFast) Some(c)
+        else checkFunctionType(c, fun, funType, hadDependents)
+      } else {
+        funType match {
+          case FunctionType(ret, params) if params.isEmpty =>
+            if (!ret.conforms(tp)) None
+            else if (checkFast)    Some(c)
+            else                   checkFunctionType(c, fun, ret)
+          case _ =>
+            reportWrong(c, TypeDoesntConformResult)
+        }
+      }
 
     ft match {
-      case Some(_funType: ScType) =>
+      case Some(funType: ScType) =>
         val macroEvaluator = ScalaMacroEvaluator.getInstance(project)
-        val funType = macroEvaluator.checkMacro(fun, MacroContext(place, Some(tp))) getOrElse _funType
+        val macroContext   = MacroContext(place, Option(tp))
+        val macroChecked   = macroEvaluator.checkMacro(fun, macroContext)
 
         if (fun.hasTypeParameters && !withLocalTypeInference)
           return None
 
         val undefineTypeParams = ScalaPsiUtil.undefineMethodTypeParams(fun)
+        val substedFunType     = subst.followed(undefineTypeParams)(funType)
 
-        val substedFunTp = subst.followed(undefineTypeParams)(funType)
+        val actualTpe =
+          macroChecked.fold(
+            {
+              case MacroEvaluationError.NoRuleDefined    => substedFunType.toOption
+              case MacroEvaluationError.MacroCheckFailed => None
+            },
+            _.toOption
+          )
 
-        val withoutDependents = approximateDependent(substedFunTp, fun.parameters.toSet)
-        val hadDependents = withoutDependents.nonEmpty
-        val updatedRetType = withoutDependents.getOrElse(substedFunTp)
-
-        if (isExtensionConversion && argsConformWeakly(substedFunTp, tp) || (updatedRetType conforms tp)) {
-          if (checkFast) Some(c)
-          else checkFunctionType(c, fun, updatedRetType, hadDependents)
-        }
-        else {
-          substedFunTp match {
-            case FunctionType(ret, params) if params.isEmpty =>
-              if (!ret.conforms(tp)) None
-              else if (checkFast) Some(c)
-              else checkFunctionType(c, fun, ret)
-            case _ =>
-              reportWrong(c, TypeDoesntConformResult)
-          }
-        }
+        for {
+          tpe                                <- actualTpe
+          (withoutDependents, hadDependents) = approximateDependent(tpe, fun.parameters.toSet)
+          candidate                          <- checkFunctionByTypeInner(withoutDependents, hadDependents)
+        } yield candidate
       case _ =>
         if (!withLocalTypeInference) reportWrong(c, BadTypeResult)
-        else None
+        else                         None
     }
   }
 
@@ -618,7 +634,7 @@ class ImplicitCollector(place: PsiElement,
   private[this] def approximateDependent(
     tpe:    ScType,
     params: Set[ScParameter]
-  ): Option[ScType] = {
+  ): (ScType, Boolean) = {
     import org.jetbrains.plugins.scala.lang.psi.api.statements.params._
 
     var hasDependents = false
@@ -629,7 +645,7 @@ class ImplicitCollector(place: PsiElement,
         UndefinedType(p, original)
     }
 
-    if (hasDependents) Some(updated) else None
+    (updated, hasDependents)
   }
 
   private def applyExtensionPredicate(cand: ScalaResolveResult): Option[ScalaResolveResult] = {
@@ -693,18 +709,13 @@ class ImplicitCollector(place: PsiElement,
 
   private def argsConformWeakly(left: ScType, right: ScType): Boolean = {
     def function1Arg(scType: ScType): Option[ScType] = scType match {
-      case ParameterizedType(ScDesignatorType(c: PsiClass), args) if args.size == 2 =>
-        if (c.qualifiedName == "scala.Function1") args.headOption
-        else None
-      case _ => None
+      case FunctionType(_, Seq(paramTpe)) => Option(paramTpe)
+      case _                              => None
     }
 
-    function1Arg(left) match {
-      case Some(leftArg) => function1Arg(right) match {
-        case Some(rightArg) => rightArg.weakConforms(leftArg)
-        case _ => false
-      }
-      case _ => false
-    }
+    (for {
+      lhsParamTpe <- function1Arg(left)
+      rhsParamTpe <- function1Arg(right)
+    } yield rhsParamTpe.weakConforms(lhsParamTpe)).getOrElse(false)
   }
 }
