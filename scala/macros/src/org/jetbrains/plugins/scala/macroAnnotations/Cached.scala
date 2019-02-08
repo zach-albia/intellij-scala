@@ -78,19 +78,21 @@ object Cached {
 
           val fields = q"""
               new _root_.scala.volatile()
-              private val $mapAndCounterRef: $atomicReferenceTypeFQN[$timestampedTypeFQN[$mapType]] =
-                new $atomicReferenceTypeFQN($timestampedFQN(null, -1L))
+              private val $mapAndCounterRef: $atomicStampedRefTypeFQN[$mapType] =
+                $atomicStampedRefFQN($createNewMap)
 
               ..$analyzeCachesField
            """
 
           val getOrUpdateMapDef = q"""
               def getOrUpdateMap() = {
-                val timestampedMap = $mapAndCounterRef.get
+                val timestampedMap = $mapAndCounterRef.snapshot
                 if (timestampedMap.modCount < currModCount) {
-                  $mapAndCounterRef.compareAndSet(timestampedMap, $timestampedFQN($createNewMap, currModCount))
+                  $mapAndCounterRef.doIfExpectedStamp(timestampedMap.modCount, currModCount) {
+                    timestampedMap.data.clear
+                  }
                 }
-                $mapAndCounterRef.get.data
+                timestampedMap.data
               }
             """
 
@@ -127,15 +129,15 @@ object Cached {
         } else {
           val fields = q"""
               new _root_.scala.volatile()
-              private val $timestampedDataRef: $atomicReferenceTypeFQN[$timestampedTypeFQN[$retTp]] =
-                new $atomicReferenceTypeFQN($timestampedFQN(${defaultValue(c)(retTp)}, -1L))
+              private val $timestampedDataRef: $atomicStampedRefTypeFQN[$retTp] =
+                $atomicStampedRefFQN()
 
             ..$analyzeCachesField
           """
 
           val getOrUpdateValue =
             q"""
-               val timestamped = $timestampedDataRef.get
+               val timestamped = $timestampedDataRef.snapshot
                if (timestamped.modCount == currModCount) timestamped.data
                else {
                  val stackStamp = $recursionManagerFQN.markStack()
@@ -143,8 +145,8 @@ object Cached {
                  val computed = $cachedFunName()
 
                  if (stackStamp.mayCacheNow()) {
-                   $timestampedDataRef.compareAndSet(timestamped, $timestampedFQN(computed, currModCount))
-                   $timestampedDataRef.get.data
+                   $timestampedDataRef.setIfExpectedStamp(timestamped.modCount, currModCount, computed)
+                   computed
                  }
                  else computed
                }

@@ -39,6 +39,16 @@ object CachedMacroUtil {
     tq"_root_.java.util.concurrent.atomic.AtomicReference"
   }
 
+  def atomicStampedRefFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    q"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedRef"
+  }
+
+  def atomicStampedRefTypeFQN(implicit c: whitebox.Context): c.universe.Tree = {
+    import c.universe.Quasiquote
+    tq"_root_.org.jetbrains.plugins.scala.caches.AtomicStampedRef"
+  }
+
   def defaultValue(c: whitebox.Context)(tp: c.universe.Tree): c.universe.Tree = {
     import c.universe.Quasiquote
     tp match {
