@@ -13,6 +13,8 @@ import org.jetbrains.plugins.scala.lang.psi.api.base._
 import org.jetbrains.plugins.scala.lang.psi.api.base.literals.ScIntegerLiteral
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ExpectedTypes.ParameterType
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.usages.ImportUsed
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.ScTemplateBody
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.CfgBuildingExpression
 import org.jetbrains.plugins.scala.lang.psi.impl
 import org.jetbrains.plugins.scala.lang.psi.implicits.ScImplicitlyConvertible
 import org.jetbrains.plugins.scala.lang.psi.types._
@@ -34,7 +36,9 @@ import scala.annotation.tailrec
 trait ScExpression extends ScBlockStatement
   with PsiAnnotationMemberValue
   with ImplicitArgumentsOwner
-  with Typeable with Compatibility.Expression {
+  with Typeable
+  with Compatibility.Expression
+  with CfgBuildingExpression {
 
   import ScExpression._
 

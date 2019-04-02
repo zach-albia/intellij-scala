@@ -19,6 +19,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.ScStableCodeReference
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.imports.usages._
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScObject, ScTemplateDefinition, ScTypeDefinition}
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.statements.ScBlockStatementCfgBuildingNoopImpl
 import org.jetbrains.plugins.scala.lang.psi.impl.base.types.ScSimpleTypeElementImpl
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScImportStmtStub
 import org.jetbrains.plugins.scala.lang.psi.stubs.elements.ScImportStmtElementType
@@ -43,7 +44,7 @@ class ScImportStmtImpl(stub: ScImportStmtStub,
                        node: ASTNode,
                        override val toString: String)
   extends ScalaStubBasedElementImpl(stub, nodeType, node)
-    with ScImportStmt {
+    with ScImportStmt with ScBlockStatementCfgBuildingNoopImpl {
 
   def importExprs: Seq[ScImportExpr] =
     getStubOrPsiChildren(ScalaElementType.IMPORT_EXPR, JavaArrayFactoryUtil.ScImportExprFactory).toSeq

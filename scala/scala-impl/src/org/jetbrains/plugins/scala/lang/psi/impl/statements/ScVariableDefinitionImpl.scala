@@ -14,6 +14,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.patterns._
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.ScTypeElement
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScExpression
 import org.jetbrains.plugins.scala.lang.psi.api.statements._
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.statements.ScVariableDefinitionCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScPropertyStub
 import org.jetbrains.plugins.scala.lang.psi.stubs.elements.ScPropertyElementType
 import org.jetbrains.plugins.scala.lang.psi.types.ScLiteralType
@@ -25,7 +26,8 @@ import org.jetbrains.plugins.scala.lang.psi.types.result._
 final class ScVariableDefinitionImpl private[psi](stub: ScPropertyStub[ScVariableDefinition],
                                                   nodeType: ScPropertyElementType[ScVariableDefinition],
                                                   node: ASTNode)
-  extends ScalaStubBasedElementImpl(stub, nodeType, node) with ScVariableDefinition {
+  extends ScalaStubBasedElementImpl(stub, nodeType, node)
+    with ScVariableDefinition with ScVariableDefinitionCfgBuildingImpl {
 
   def assignment: Option[PsiElement] = Option(findChildByType[PsiElement](ScalaTokenTypes.tASSIGN))
 
