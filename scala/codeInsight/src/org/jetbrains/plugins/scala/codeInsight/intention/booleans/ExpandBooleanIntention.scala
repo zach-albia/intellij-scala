@@ -27,7 +27,7 @@ final class ExpandBooleanIntention extends PsiElementBaseIntentionAction {
       val offset = editor.getCaretModel.getOffset
       range.getStartOffset <= offset && offset <= range.getEndOffset
     }.collect {
-      case ScReturn(Typeable(scType)) => scType.canonicalText
+      case ScReturn(Typeable(scType)) => scType.widen.canonicalText
     }.contains("Boolean")
 
   override def invoke(project: Project, editor: Editor, element: PsiElement): Unit = {

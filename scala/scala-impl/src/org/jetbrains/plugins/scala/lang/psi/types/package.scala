@@ -210,9 +210,9 @@ package object types {
       innerUpdate(scType, Set.empty)
     }
 
-    def extractDesignatorSingleton: Option[ScType] = scType match {
+    def extractDesignatorSingleton: Option[ScType] = scType.widen match {
       case desinatorOwner: DesignatorOwner => desinatorOwner.designatorSingletonType
-      case _ => None
+      case _                               => None
     }
 
     def tryExtractDesignatorSingleton: ScType = extractDesignatorSingleton.getOrElse(scType)
@@ -225,7 +225,7 @@ package object types {
 
     def widen: ScType = scType match {
       case lit: ScLiteralType if lit.allowWiden => lit.wideType
-      case other => other
+      case other                                => other
     }
 
     def tryWrapIntoSeqType(implicit scope: ElementScope): ScType =

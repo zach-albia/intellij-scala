@@ -55,6 +55,8 @@ class ScLiteralType private (
     }
   }
 
+  override def isFinalType: Boolean = true
+
   def get: Any         = literalValue
   def isEmpty: Boolean = false
 }

@@ -1,2 +1,2 @@
 /*start*/'c'/*end*/
-//Char
+//Char('c')

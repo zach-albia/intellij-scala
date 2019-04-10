@@ -11,6 +11,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.FunctionType
 import org.jetbrains.plugins.scala.lang.psi.types.api.designator.{DesignatorOwner, ScDesignatorType, ScThisType}
 import org.jetbrains.plugins.scala.lang.psi.types.result.Typeable
 import org.jetbrains.plugins.scala.lang.psi.types.{ScCompoundType, ScLiteralType, ScType}
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 object ShapelessMkWitness extends ScalaMacroTypeable with ShapelessUtils {
   private[this] val witnessFqn = "shapeless.Witness"
@@ -65,7 +66,7 @@ object ShapelessMkWitness extends ScalaMacroTypeable with ShapelessUtils {
   private[this] def generateWitnessAux(singletonType: ScType, context: PsiElement): Option[ScType] = {
     val tpeText = singletonType match {
       case lit: ScLiteralType => ScLiteralType.printValue(lit)
-      case other              => other.canonicalText
+      case other              => other.canonicalCodeText
     }
 
     ScalaPsiElementFactory.createTypeFromText(s"$witnessFqn.Aux[$tpeText]", context, null)

@@ -23,6 +23,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.ScType
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.refactoring.namesSuggester.NameSuggester
 import org.jetbrains.plugins.scala.lang.resolve.ResolveTargets._
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 /** Contributor adds unresolved names in current scope to completion list.
   * Unresolved reference name adds to completion list, according to [[ScReference.getKinds()]]
@@ -179,12 +180,12 @@ sealed abstract class ScalaTextLookupItem(protected val reference: ScReference)
       case assign@ScAssignment(_, Some(assignment)) =>
         suggester(assign.referenceName) -> assignment.`type`().getOrAny
       case expression =>
-        val `type` = expression.`type`().getOrAny
+        val `type` = expression.`type`().getOrAny.widen
         suggester(`type`) -> `type`
     }
 
     arguments.map(createParameter).map {
-      case (parameterName, scType) => s"$parameterName${ScalaTokenTypes.tCOLON} ${scType.presentableText}"
+      case (parameterName, scType) => s"$parameterName${ScalaTokenTypes.tCOLON} ${scType.codeText}"
     }.commaSeparated(model = Model.Parentheses)
   }
 }

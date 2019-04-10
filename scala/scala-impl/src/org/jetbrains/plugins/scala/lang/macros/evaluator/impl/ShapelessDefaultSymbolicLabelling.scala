@@ -1,9 +1,11 @@
 package org.jetbrains.plugins.scala.lang.macros.evaluator.impl
+
 import org.jetbrains.plugins.scala.lang.macros.evaluator.impl.ShapelessUtils.SingletonSymbolTpe
 import org.jetbrains.plugins.scala.lang.macros.evaluator.{MacroContext, MacroImpl, ScalaMacroTypeable}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 /**
   * Generates type signatures that serialize _named_ case class fields
@@ -23,7 +25,7 @@ object ShapelessDefaultSymbolicLabelling extends ScalaMacroTypeable with Shapele
     val reprTpStr   = fields.foldRight(fqHNil) { case ((pName, _), suffix) =>
       s"$fqColonColon[${SingletonSymbolTpe(pName)}, $suffix]"
     }
-    val genericStr  = s"$fqDefSymLab.Aux[${targetClass.canonicalText}, $reprTpStr]"
+    val genericStr  = s"$fqDefSymLab.Aux[${targetClass.canonicalCodeText}, $reprTpStr]"
     ScalaPsiElementFactory.createTypeFromText(genericStr, context.place, null)
   }
 }

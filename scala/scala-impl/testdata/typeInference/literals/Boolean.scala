@@ -1,2 +1,2 @@
 /*start*/true/*end*/
-//Boolean
+//Boolean(true)

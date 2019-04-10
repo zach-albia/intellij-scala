@@ -4,6 +4,7 @@ import org.jetbrains.plugins.scala.lang.macros.evaluator.{MacroContext, MacroImp
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 /**
   * generates HList types without tagging
@@ -21,7 +22,7 @@ object ShapelessMaterializeGeneric extends ScalaMacroTypeable with ShapelessUtil
     val targetType  = extractTargetType(context)
     val fields      = extractFields(targetType).map(_._2)
     val reprTpStr   = hlistText(fields)
-    val genericStr  = s"$fqGeneric.Aux[${targetType.canonicalText}, $reprTpStr]"
+    val genericStr  = s"$fqGeneric.Aux[${targetType.canonicalCodeText}, $reprTpStr]"
     ScalaPsiElementFactory.createTypeFromText(genericStr, context.place, null)
   }
 }

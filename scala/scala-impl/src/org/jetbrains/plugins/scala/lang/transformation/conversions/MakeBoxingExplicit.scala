@@ -22,13 +22,13 @@ class MakeBoxingExplicit extends AbstractTransformer {
   private val Class = "scala.runtime.BoxesRunTime"
 
   def boxMethodName(t: ScType): Option[String] = {
-    t match {
+    t.widen match {
       case _ if t.isUnit => None
       case v: ValType =>
         val postfix = v.name match {
           case "Char" => "Character"
-          case "Int" => "Integer"
-          case name => name
+          case "Int"  => "Integer"
+          case name   => name
         }
         Some(s"boxTo$postfix")
       case _ => None

@@ -1,2 +1,2 @@
 /*start*/'symbol/*end*/
-//Symbol
+//Symbol('symbol)

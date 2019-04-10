@@ -1,2 +1,2 @@
 /*start*/1L/*end*/
-//Long
+//Long(1L)

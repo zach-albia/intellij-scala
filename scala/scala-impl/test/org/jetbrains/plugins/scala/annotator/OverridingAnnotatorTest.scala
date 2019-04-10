@@ -109,7 +109,7 @@ class OverridingAnnotatorTest extends OverridingAnnotatorTestBase {
       """
         |object ppp {
         | class Base {
-        |   final val foo = 1
+        |   final val foo = 2
         | }
         |
         | class Derived extends Base {

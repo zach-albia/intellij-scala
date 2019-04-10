@@ -1,2 +1,2 @@
 /*start*/"""string"""/*end*/
-//String
+//String("string")

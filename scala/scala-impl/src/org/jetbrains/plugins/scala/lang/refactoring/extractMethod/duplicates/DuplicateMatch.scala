@@ -9,9 +9,8 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.{ScInterpolatedStringLitera
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScExpression, ScReferenceExpression}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.ScTypedDefinition
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.synthetic.ScSyntheticFunction
-import org.jetbrains.plugins.scala.lang.psi.types.api.designator.DesignatorOwner
+import org.jetbrains.plugins.scala.lang.psi.types.ScTypeExt
 import org.jetbrains.plugins.scala.lang.psi.types.result._
-import org.jetbrains.plugins.scala.lang.psi.types.{ScType, ScTypeExt}
 import org.jetbrains.plugins.scala.lang.refactoring.extractMethod.duplicates.DuplicatesUtil._
 import org.jetbrains.plugins.scala.lang.refactoring.extractMethod.{ExtractMethodOutput, ExtractMethodParameter}
 
@@ -88,21 +87,11 @@ class DuplicateMatch(pattern: DuplicatePattern, val candidates: Seq[PsiElement])
     }
   }
 
-  private def typesEquiv(expr1: ScExpression, expr2: ScExpression) = {
+  private def typesEquiv(expr1: ScExpression, expr2: ScExpression) =
     (expr1.`type`(), expr2.`type`()) match {
-      case (Right(t1), Right(t2)) =>
-        def extractFromSingletonType(t: ScType) = t match {
-          case designatorOwner: DesignatorOwner if designatorOwner.isSingleton =>
-            designatorOwner.extractDesignatorSingleton
-          case _ => Some(t)
-        }
-        val Seq(newTp1, newTp2) = Seq(t1, t2).map(extractFromSingletonType)
-        newTp1.zip(newTp2).forall {
-          case (tp1, tp2) => tp1.equiv(tp2)
-        }
+      case (Right(t1), Right(t2))   => t1.tryExtractDesignatorSingleton.equiv(t2.tryExtractDesignatorSingleton)
       case (Failure(_), Failure(_)) => true
-      case _ => false
+      case _                        => false
     }
-  }
 
 }

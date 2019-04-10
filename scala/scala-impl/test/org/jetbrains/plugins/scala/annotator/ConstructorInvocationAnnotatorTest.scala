@@ -11,7 +11,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.Compatibility
 
 class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
   final val Header = """
-  class Seq[+A] 
+  class Seq[+A]
   object Seq { def apply[A](a: A) = new Seq[A] }
   class Simple
   class Complex(r: Double, i: Double)
@@ -42,11 +42,11 @@ class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
   class Klass[K](a: K)
   type Alias[A] = Klass[A]
   """
-  
+
   def testEmpty() {
     assertNothing(messages(""))
   }
-  
+
   def testFine() {
     val codes = Seq(
       "new Simple",
@@ -109,7 +109,7 @@ class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
     assertNothing(messages("new FFF()()"))
     assertNothing(messages("new GGG()()"))
     assertMessages(messages("new FFF()(true)"))(
-      Error("true", "Type mismatch, expected: Unit, actual: Boolean")
+      Error("true", "Type mismatch, expected: Unit, actual: Boolean(true)")
     )
   }
 
@@ -177,7 +177,7 @@ class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
   def testMissingAndTypeMismatch() {
     assertMessagesSorted(messages("new DD(true)"))(
       Error("(true)", "Unspecified value parameters: c: Int"),
-      Error("true", "Type mismatch, expected: Int, actual: Boolean")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)")
     )
   }
 
@@ -255,11 +255,11 @@ class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
       """.stripMargin
 
     assertMatches(messages(text)) {
-      case Error("3", "Type mismatch, expected: Boolean, actual: Int") :: Nil =>
+      case Error("3", "Type mismatch, expected: Boolean, actual: Int(3)") :: Nil =>
     }
 
     assertMatches(messages(text + " {}")) {
-      case Error("3", "Type mismatch, expected: Boolean, actual: Int") :: Nil =>
+      case Error("3", "Type mismatch, expected: Boolean, actual: Int(3)") :: Nil =>
     }
   }
 
@@ -274,43 +274,43 @@ class ConstructorInvocationAnnotatorTest extends SimpleTestCase {
       """.stripMargin
 
     assertMatches(messages(text)) {
-      case Error("true", "Type mismatch, expected: Int, actual: Boolean") :: Nil =>
+      case Error("true", "Type mismatch, expected: Int, actual: Boolean(true)") :: Nil =>
     }
 
     assertMatches(messages(text + " {}")) {
-      case Error("true", "Type mismatch, expected: Int, actual: Boolean") :: Nil =>
+      case Error("true", "Type mismatch, expected: Int, actual: Boolean(true)") :: Nil =>
     }
   }
 
   def testTypeMismatch() {
     assertMatches(messages("new A(false)")) {
-      case Error("false", "Type mismatch, expected: Int, actual: Boolean") :: Nil =>
+      case Error("false", "Type mismatch, expected: Int, actual: Boolean(false)") :: Nil =>
     }
 
     assertMatches(messages("new B[Int](false)")) {
-      case Error("false", "Type mismatch, expected: Int, actual: Boolean") :: Nil =>
+      case Error("false", "Type mismatch, expected: Int, actual: Boolean(false)") :: Nil =>
     }
 
     assertMessagesSorted(messages("new D(3.3)"))(
-      Error("3.3", "Type mismatch, expected: Boolean, actual: Double"),
-      Error("3.3", "Type mismatch, expected: Int, actual: Double")
+      Error("3.3", "Type mismatch, expected: Boolean, actual: Double(3.3)"),
+      Error("3.3", "Type mismatch, expected: Int, actual: Double(3.3)")
     )
 
     assertMessagesSorted(messages("new D(3.3) {}"))(
-      Error("3.3", "Type mismatch, expected: Boolean, actual: Double"),
-      Error("3.3", "Type mismatch, expected: Int, actual: Double")
+      Error("3.3", "Type mismatch, expected: Boolean, actual: Double(3.3)"),
+      Error("3.3", "Type mismatch, expected: Int, actual: Double(3.3)")
     )
 
     assertMessagesSorted(messages("new DDD(true)(false)"))(
-      Error("true", "Type mismatch, expected: Int, actual: Boolean"),
-      Error("false", "Type mismatch, expected: Int, actual: Boolean")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)"),
+      Error("false", "Type mismatch, expected: Int, actual: Boolean(false)")
     )
 
     assertMessagesSorted(messages("new FFF(3)(true)"))(
-      Error("true", "Type mismatch, expected: Int, actual: Boolean"),
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)"),
     )
   }
-  
+
   def testMalformedSignature() {
     assertMatches(messages("class Malformed(a: A*, b: B); new Malformed(0)")) {
       case Error("Malformed", "Constructor has malformed definition") :: Nil =>

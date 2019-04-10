@@ -96,14 +96,14 @@ object ScPatternAnnotator {
       case _: ScConstructorPattern if neverMatches && patType.isFinalType =>
         val message = ScalaBundle.message("constructor.cannot.be.instantiated.to.expected.type", patType, exprType)
         holder.createErrorAnnotation(pattern, message)
-      case (_: ScTuplePattern | _: ScInfixPattern) if neverMatches =>
+      case _: ScTuplePattern | _: ScInfixPattern if neverMatches =>
         val message = ScalaBundle.message("pattern.type.incompatible.with.expected", patType, exprType)
         holder.createErrorAnnotation(pattern, message)
       case _  if patType.isFinalType && neverMatches =>
         val (exprTypeText, patTypeText) = ScTypePresentation.different(exprType, patType)
         val message = ScalaBundle.message("pattern.type.incompatible.with.expected", patTypeText, exprTypeText)
         holder.createErrorAnnotation(pattern, message)
-      case (_: ScTypedPattern | _: ScConstructorPattern) if neverMatches =>
+      case _: ScTypedPattern | _: ScConstructorPattern if neverMatches =>
         val erasureWarn =
           if (isEliminatedByErasure) ScalaBundle.message("erasure.warning")
           else ""

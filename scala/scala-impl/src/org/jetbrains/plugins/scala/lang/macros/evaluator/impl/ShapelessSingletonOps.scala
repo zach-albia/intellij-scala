@@ -10,6 +10,7 @@ import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.macros.evaluator.impl.ShapelessUtils.SingletonSymbolTpe
 import org.jetbrains.plugins.scala.lang.psi.types.api.FunctionType
 import org.jetbrains.plugins.scala.project.ProjectContext
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 /**
   * Macro for convinient singleton generation from terms, e.g. in
@@ -42,7 +43,7 @@ object ShapelessSingletonOps extends ScalaMacroTypeable with ShapelessUtils {
   private def typeCarrierType(keyTpe: ScType, insertionPlace: PsiElement): Option[ScType] = {
     val witnessText = keyTpe match {
       case lit: ScLiteralType => ScLiteralType.printValue(lit)
-      case other              => other.canonicalText
+      case other              => other.canonicalCodeText
     }
 
     val text =

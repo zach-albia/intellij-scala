@@ -76,15 +76,15 @@ class DuplicatePattern(val elements: Seq[PsiElement], parameters: Seq[ExtractMet
       override def visitScalaElement(element: ScalaPsiElement): Unit = {
         if (isSignificant(element)) {
           isDuplicateStart(element) match {
-            case Some(mtch) if !seen(mtch.candidates(0)) =>
+            case Some(mtch) if !seen(mtch.candidates.head) =>
               result += mtch
-              seen += mtch.candidates(0)
+              seen += mtch.candidates.head
             case _ => super.visitScalaElement(element)
           }
         }
       }
     }
     scope.acceptChildren(visitor)
-    result.toSeq
+    result
   }
 }

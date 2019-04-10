@@ -11,6 +11,7 @@ import org.jetbrains.plugins.scala.lang.psi.types.api.designator.{ScDesignatorTy
 import org.jetbrains.plugins.scala.lang.psi.types.api.{ParameterizedType, StdTypes}
 import org.jetbrains.plugins.scala.lang.psi.types.{ScCompoundType, ScLiteralType, ScParameterizedType, ScType}
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaNamesUtil
+import org.jetbrains.plugins.scala.lang.refactoring._
 
 trait ShapelessUtils {
   private[macros] val fqDefSymLab  = "_root_.shapeless.DefaultSymbolicLabelling"
@@ -49,7 +50,7 @@ trait ShapelessUtils {
   }
 
   protected def hlistText(componentTypes: Seq[ScType]): String =
-    hListTextRaw(componentTypes.map(_.canonicalText))
+    hListTextRaw(componentTypes.map(_.canonicalCodeText))
 
   protected def hListTextRaw(componentTexts: Seq[String], typePosition: Boolean = true): String = {
     val wrap: (String, String) => String =
@@ -66,7 +67,7 @@ trait ShapelessUtils {
       case ScalaNamesUtil.isBacktickedName(literalText) =>
         parseLiteralType(literalText, ref.getContext, ref).map {
           case lit: ScLiteralType => ScLiteralType.printValue(lit)
-          case other              => other.canonicalText // singleton symbol type
+          case other              => other.canonicalCodeText // singleton symbol type
         }
       case _ => None
     }
@@ -111,7 +112,7 @@ object ShapelessUtils extends ShapelessUtils {
   private[macros] object TaggedTpe {
     def unapply(tpe: ScParameterizedType): Option[ScLiteralType] = tpe match {
       case ParameterizedType(des, Seq(litTpe: ScLiteralType))
-        if des.canonicalText == fqTagged => Option(litTpe)
+        if des.canonicalCodeText == fqTagged => Option(litTpe)
       case _ => None
     }
   }

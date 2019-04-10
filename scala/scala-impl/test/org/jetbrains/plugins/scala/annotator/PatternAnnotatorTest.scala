@@ -108,7 +108,7 @@ class PatternAnnotatorTest extends ScalaLightPlatformCodeInsightTestCaseAdapter 
 
   def testLiteralPattern(): Unit = {
     val code: String = "val \"a\" :: xs = 1 :: Nil"
-    checkError(code, "\"a\"", patternTypeIncompatible("String", "Int"))
+    checkError(code, "\"a\"", patternTypeIncompatible("String(\"a\")", "Int"))
     assertNoWarnings(code)
   }
 
@@ -217,7 +217,7 @@ class PatternAnnotatorTest extends ScalaLightPlatformCodeInsightTestCaseAdapter 
       |  }
       |}
     """.stripMargin
-    checkError(text, "2", patternTypeIncompatible("Int", "String"))
+    checkError(text, "2", patternTypeIncompatible("Int(2)", "String"))
     assertNoWarnings(text)
   }
 
@@ -353,7 +353,7 @@ class PatternAnnotatorTest extends ScalaLightPlatformCodeInsightTestCaseAdapter 
         |  case class appliedTo2(name: String, arg1: String, arg2: String)
         |}
       """.stripMargin
-    checkError(code, "foo appliedTo2 (\"1\", \"2\")", patternTypeIncompatible("Bar.appliedTo2", "Int"))
+    checkError(code, "foo appliedTo2 (\"1\", \"2\")", patternTypeIncompatible("Bar.appliedTo2", "Int(1)"))
     assertNoWarnings(code)
   }
 
@@ -411,7 +411,7 @@ class PatternAnnotatorTest extends ScalaLightPlatformCodeInsightTestCaseAdapter 
         |  case class appliedTo2(name: String, arg1: String*)
         |}
       """.stripMargin
-    checkErrors(code, List(Error("4", patternTypeIncompatible("Int", "String"))))
+    checkErrors(code, List(Error("4", patternTypeIncompatible("Int(4)", "String"))))
     assertNoWarnings(code)
   }
 
@@ -481,7 +481,7 @@ class PatternAnnotatorTest extends ScalaLightPlatformCodeInsightTestCaseAdapter 
         |class Foo
       """.stripMargin
     assertNoErrors(text)
-    checkWarning(text, "ScFunctionType(_)", fruitless("(Int, Int)", "Foo"))
+    checkWarning(text, "ScFunctionType(_)", fruitless("(Int(1), Int(2))", "Foo"))
   }
 
   def testInfixPatternWithConstructorOnTheRight(): Unit = {

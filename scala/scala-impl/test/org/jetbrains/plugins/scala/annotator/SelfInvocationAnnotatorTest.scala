@@ -110,33 +110,33 @@ class SelfInvocationAnnotatorTest extends SimpleTestCase {
 
   def testTypeMismatch() {
     assertMessagesSorted(messagesForNonGeneric("this(0, false)"))(
-      Error("false", "Type mismatch, expected: Int, actual: Boolean")
+      Error("false", "Type mismatch, expected: Int, actual: Boolean(false)")
     )
 
     assertMessagesSorted(messagesForNonGeneric("this(true, false)"))(
-      Error("true", "Type mismatch, expected: Int, actual: Boolean"),
-      Error("false", "Type mismatch, expected: Int, actual: Boolean")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)"),
+      Error("false", "Type mismatch, expected: Int, actual: Boolean(false)")
     )
 
     assertMessagesSorted(messagesForNonGenericMulti("this(true, 1)"))(
-      Error("true", "Type mismatch, expected: Int, actual: Boolean"),
-      Error("1", "Type mismatch, expected: Boolean, actual: Int")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)"),
+      Error("1", "Type mismatch, expected: Boolean, actual: Int(1)")
     )
 
     assertMessagesSorted(messagesForNonGenericMulti("this(0, 1)(true)"))(
-      Error("true", "Type mismatch, expected: Int, actual: Boolean")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)")
     )
 
     // Generic
     assertMessagesSorted(messagesForGeneric("this(1)(false)"))(
-      Error("false", "Type mismatch, expected: T, actual: Boolean")
+      Error("false", "Type mismatch, expected: T, actual: Boolean(false)")
     )
   }
 
   def testMissingAndTypeMismatch() {
     assertMessagesSorted(messagesForGeneric("this(true)"))(
       Error("(true)", "Unspecified value parameters: d: Boolean"),
-      Error("true", "Type mismatch, expected: Int, actual: Boolean")
+      Error("true", "Type mismatch, expected: Int, actual: Boolean(true)")
     )
   }
 

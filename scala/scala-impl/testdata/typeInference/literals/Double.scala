@@ -1,2 +1,2 @@
 /*start*/1.0/*end*/
-//Double
+//Double(1.0)
