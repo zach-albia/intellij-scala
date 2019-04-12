@@ -257,10 +257,10 @@ object InferUtil {
   /**
     * Util method to update type according to expected type
     *
-    * @param _nonValueType          type, to update it should be PolymorphicType
-    * @param expectedType           appropriate expected type
-    * @param expr                   place
-    * @param canThrowSCE            we fail to get right type then if canThrowSCE throw SafeCheckException
+    * @param _nonValueType type, to update it should be PolymorphicType
+    * @param expectedType  appropriate expected type
+    * @param expr          place
+    * @param canThrowSCE   we fail to get right type then if canThrowSCE throw SafeCheckException
     * @return updated type
     */
   def updateAccordingToExpectedType(_nonValueType: ScType,
@@ -302,10 +302,10 @@ object InferUtil {
         case _               => internal
       }
 
-      val valueType = sameDepth.inferValueType
-
-      val expectedParam = Parameter("", None, expected, expected)
-      val expressionToUpdate = new Expression(ScSubstitutor.bind(typeParams)(UndefinedType(_)).apply(valueType))
+      val valueType          = sameDepth.inferValueType
+      val expectedParam      = Parameter("", None, expected, expected)
+      val undefSubst         = ScSubstitutor.bind(typeParams)(UndefinedType(_))
+      val expressionToUpdate = new Expression(undefSubst(valueType))
 
       val inferredWithExpected =
         localTypeInference(internal, Seq(expectedParam), Seq(expressionToUpdate), typeParams,
@@ -457,12 +457,15 @@ object InferUtil {
 
   class SafeCheckException extends ControlThrowable
 
-  def localTypeInferenceWithApplicabilityExt(retType: ScType, params: Seq[Parameter], exprs: Seq[Expression],
-                                             typeParams: Seq[TypeParameter],
-                                             shouldUndefineParameters: Boolean = true,
-                                             canThrowSCE: Boolean = false,
-                                             filterTypeParams: Boolean = true
-                                            ): (ScTypePolymorphicType, ConformanceExtResult) = {
+  def localTypeInferenceWithApplicabilityExt(
+    retType:                  ScType,
+    params:                   Seq[Parameter],
+    exprs:                    Seq[Expression],
+    typeParams:               Seq[TypeParameter],
+    shouldUndefineParameters: Boolean = true,
+    canThrowSCE:              Boolean = false,
+    filterTypeParams:         Boolean = true
+  ): (ScTypePolymorphicType, ConformanceExtResult) = {
     implicit val projectContext: ProjectContext = retType.projectContext
 
     val typeParamIds = typeParams.map(_.typeParamId).toSet
@@ -470,13 +473,29 @@ object InferUtil {
 
     // See SCL-3052, SCL-3058
     // This corresponds to use of `isCompatible` in `Infer#methTypeArgs` in scalac, where `isCompatible` uses `weak_<:<`
-    val s: ScSubstitutor = if (shouldUndefineParameters) ScSubstitutor.bind(typeParams)(UndefinedType(_)) else ScSubstitutor.empty
+    val s =
+      if (shouldUndefineParameters) ScSubstitutor.bind(typeParams)(UndefinedType(_))
+      else                          ScSubstitutor.empty
+
     val abstractSubst = ScTypePolymorphicType(retType, typeParams).abstractTypeSubstitutor
-    val paramsWithUndefTypes = params.map(p => p.copy(paramType = s(p.paramType),
-      expectedType = abstractSubst(p.paramType), defaultType = p.defaultType.map(s)))
-    val conformanceResult@ConformanceExtResult(problems, constraints, _, _) =
-      Compatibility.checkConformanceExt(checkNames = true, paramsWithUndefTypes, exprs, checkWithImplicits = true,
-      isShapesResolve = false)
+
+    val paramsWithUndefTypes = params.map(
+      p =>
+        p.copy(
+          paramType    = s(p.paramType),
+          expectedType = abstractSubst(p.paramType),
+          defaultType  = p.defaultType.map(s)
+        )
+    )
+
+    val conformanceResult @ ConformanceExtResult(problems, constraints, _, _) =
+      Compatibility.checkConformanceExt(
+        checkNames = true,
+        paramsWithUndefTypes,
+        exprs,
+        checkWithImplicits = true,
+        isShapesResolve    = false
+      )
 
     val tpe = if (problems.isEmpty) {
       constraints.substitutionBounds(canThrowSCE) match {

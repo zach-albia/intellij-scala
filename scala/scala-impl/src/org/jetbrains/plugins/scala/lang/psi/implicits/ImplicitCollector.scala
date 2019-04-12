@@ -677,9 +677,9 @@ class ImplicitCollector(place: PsiElement,
     }
   }
 
-  private def dominates(t: ScType, u: ScType): Boolean = {
-    complexity(t) > complexity(u) && topLevelTypeConstructors(t).intersect(topLevelTypeConstructors(u)).nonEmpty
-  }
+  private def dominates(t: ScType, u: ScType): Boolean =
+    complexity(t) > complexity(u) &&
+      topLevelTypeConstructors(t).intersect(topLevelTypeConstructors(u)).nonEmpty
 
   private def topLevelTypeConstructors(tp: ScType): Set[ScType] = {
     tp match {
@@ -694,18 +694,17 @@ class ImplicitCollector(place: PsiElement,
     }
   }
 
-  private def complexity(tp: ScType): Int = {
+  private def complexity(tp: ScType): Int =
     tp match {
-      case ScProjectionType(proj, _) => 1 + complexity(proj)
-      case ParameterizedType(_, args) => 1 + args.foldLeft(0)(_ + complexity(_))
+      case ScProjectionType(proj, _)     => 1 + complexity(proj)
+      case ParameterizedType(_, args)    => 1 + args.foldLeft(0)(_ + complexity(_))
       case ScDesignatorType(_: ScObject) => 1
       case ScDesignatorType(v: ScTypedDefinition) =>
         val valueType: ScType = v.`type`().getOrAny
         1 + complexity(valueType)
       case ScCompoundType(comps, _, _) => comps.foldLeft(0)(_ + complexity(_))
-      case _ => 1
+      case _                           => 1
     }
-  }
 
   private def argsConformWeakly(left: ScType, right: ScType): Boolean = {
     def function1Arg(scType: ScType): Option[ScType] = scType match {

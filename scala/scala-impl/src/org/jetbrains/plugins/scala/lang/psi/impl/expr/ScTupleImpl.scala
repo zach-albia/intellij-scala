@@ -9,6 +9,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.types.ScLiteralType
 import org.jetbrains.plugins.scala.lang.psi.types.api.{TupleType, Unit}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
+import org.jetbrains.plugins.scala.lang.psi.types.api.Singleton
 
 /**
  * @author ilyas, Alexander Podkhalyuzin
@@ -17,8 +18,23 @@ class ScTupleImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScTuple
 
   protected override def innerType: TypeResult = {
     val result = exprs.map(_.`type`().getOrAny) match {
-      case Seq() => Unit
-      case components => TupleType(components)
+      case Seq()      => Unit
+      case components =>
+        lazy val expectedComponents = this.expectedType() match {
+          case TupleType(comps) => comps
+          case _                => Seq.empty
+        }
+
+        val widenedComponents = components.zipWithIndex.map {
+          case (lit: ScLiteralType, idx) =>
+            val expectedComp   = expectedComponents.lift(idx)
+            val inferSingleton = expectedComp.exists(_.conforms(Singleton))
+
+            if (inferSingleton) lit
+            else                lit.widen
+          case (other, _) => other
+        }
+        TupleType(widenedComponents)
     }
     Right(result)
   }
