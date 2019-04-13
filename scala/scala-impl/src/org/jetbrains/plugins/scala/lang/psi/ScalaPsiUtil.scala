@@ -23,7 +23,7 @@ import org.jetbrains.plugins.scala.lang.formatting.settings.ScalaCodeStyleSettin
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.parser.util.ParserUtils
 import org.jetbrains.plugins.scala.lang.psi.api.PropertyMethods._
-import org.jetbrains.plugins.scala.lang.psi.api.base._
+import org.jetbrains.plugins.scala.lang.psi.api.base.{ScPrimaryConstructor, _}
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.{ScBindingPattern, ScCaseClause, ScPatternArgumentList}
 import org.jetbrains.plugins.scala.lang.psi.api.base.types._
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
@@ -1109,25 +1109,33 @@ object ScalaPsiUtil {
     }
   }
 
+  @annotation.tailrec
+  private def simpleBoundName(bound: ScTypeElement): String = bound match {
+    case ScSimpleTypeElement(Some(ref))     => NameTransformer.encode(ref.refName)
+    case proj: ScTypeProjection             => NameTransformer.encode(proj.refName)
+    case ScInfixTypeElement(_, op, _)       => NameTransformer.encode(op.refName)
+    case ScParameterizedTypeElement(ref, _) => simpleBoundName(ref)
+    case other                              => s"`${other.getText.replaceAll("\\s+", "")}`"
+  }
+
   private def contextBoundParameterName(typeParameter: ScTypeParam, bound: ScTypeElement, idx: Int): String = {
-    val boundName = {
-      val name = bound match {
-        case ScSimpleTypeElement(Some(ref)) => ref.refName
-        case projection: ScTypeProjection   => projection.refName
-        case _                              => bound.getText
-      }
-
-      NameTransformer.encode(name)
-    }
-
-    val tpName = NameTransformer.encode(typeParameter.name)
+    val boundName = simpleBoundName(bound)
+    val tpName    = NameTransformer.encode(typeParameter.name)
     StringUtil.decapitalize(s"$boundName$$$tpName$$$idx")
   }
 
   def originalContextBound(parameter: ScParameter): Option[(ScTypeParam, ScTypeElement)] = {
     if (parameter.isPhysical) return None
 
-    val ownerTypeParams = parameter.owner.asOptionOf[ScTypeParametersOwner].toSeq.flatMap(_.typeParameters)
+    val owner =
+      parameter.owner match {
+        case ScPrimaryConstructor.ofClass(cls) => Option(cls)
+        case other: ScTypeParametersOwner      => Option(other)
+        case _                                 => None
+      }
+
+    val ownerTypeParams = owner.toSeq.flatMap(_.typeParameters)
+
     val bounds = ownerTypeParams.flatMap(tp =>
       tp.contextBoundTypeElement.zipWithIndex.map { case (bound, idx) => (tp, bound, idx) }
     )
