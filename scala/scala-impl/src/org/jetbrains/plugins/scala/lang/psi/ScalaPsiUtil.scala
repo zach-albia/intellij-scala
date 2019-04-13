@@ -54,6 +54,7 @@ import org.jetbrains.plugins.scala.util.{SAMUtil, ScEquivalenceUtil}
 
 import scala.annotation.tailrec
 import scala.collection.{Seq, Set, mutable}
+import scala.reflect.NameTransformer
 
 /**
   * User: Alexander Podkhalyuzin
@@ -1108,23 +1109,31 @@ object ScalaPsiUtil {
     }
   }
 
-  private def contextBoundParameterName(typeParameter: ScTypeParam, bound: ScTypeElement): String = {
-    val boundName = bound match {
-      case ScSimpleTypeElement(Some(ref)) => ref.refName
-      case projection: ScTypeProjection   => projection.refName
-      case _                              => bound.getText
+  private def contextBoundParameterName(typeParameter: ScTypeParam, bound: ScTypeElement, idx: Int): String = {
+    val boundName = {
+      val name = bound match {
+        case ScSimpleTypeElement(Some(ref)) => ref.refName
+        case projection: ScTypeProjection   => projection.refName
+        case _                              => bound.getText
+      }
+
+      NameTransformer.encode(name)
     }
-    val tpName = typeParameter.name
-    StringUtil.decapitalize(s"$boundName$$$tpName")
+
+    val tpName = NameTransformer.encode(typeParameter.name)
+    StringUtil.decapitalize(s"$boundName$$$tpName$$$idx")
   }
 
   def originalContextBound(parameter: ScParameter): Option[(ScTypeParam, ScTypeElement)] = {
     if (parameter.isPhysical) return None
 
     val ownerTypeParams = parameter.owner.asOptionOf[ScTypeParametersOwner].toSeq.flatMap(_.typeParameters)
-    val bounds = ownerTypeParams.flatMap(tp => tp.contextBoundTypeElement.map((tp, _)))
-    bounds.find {
-      case (tp, te) => contextBoundParameterName(tp, te) == parameter.name
+    val bounds = ownerTypeParams.flatMap(tp =>
+      tp.contextBoundTypeElement.zipWithIndex.map { case (bound, idx) => (tp, bound, idx) }
+    )
+
+    bounds.collectFirst {
+      case (tp, te, idx) if contextBoundParameterName(tp, te, idx) == parameter.name => (tp, te)
     }
   }
 
@@ -1156,9 +1165,10 @@ object ScalaPsiUtil {
 
     val bounds = typeParameters.flatMap { typeParameter =>
       val parameterName = typeParameter.name
-      typeParameter.contextBoundTypeElement.map { typeElement =>
-        val syntheticName = contextBoundParameterName(typeParameter, typeElement)
-        s"`$syntheticName` : (${typeElement.getText})[$parameterName]"
+      typeParameter.contextBoundTypeElement.zipWithIndex.map {
+        case (typeElement, idx) =>
+          val syntheticName = contextBoundParameterName(typeParameter, typeElement, idx)
+          s"$syntheticName : (${typeElement.getText})[$parameterName]"
       }
     }
 
