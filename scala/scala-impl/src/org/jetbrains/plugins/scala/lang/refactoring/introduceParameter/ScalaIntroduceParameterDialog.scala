@@ -38,7 +38,7 @@ class ScalaIntroduceParameterDialog(project: Project,
 
   override def init(): Unit = {
     super.init()
-    setTitle(ScalaIntroduceParameterHandler.REFACTORING_NAME)
+    setTitle(ScalaIntroduceParameterHandler.refactoringName)
   }
 
   override def createNorthPanel(): JComponent = {

@@ -56,7 +56,7 @@ object FlattenSimplification extends SimplificationType {
     }
   }
 
-  private def isNestedOption(qual: ScExpression) = qual.`type`().toOption.map(_.tryExtractDesignatorSingleton) match {
+  private def isNestedOption(qual: ScExpression) = qual.`type`().toOption.map(_.widen) match {
     case Some(outer: ScParameterizedType) if isOption(outer.designator) => outer.typeArguments match {
       case Seq(inner: ScParameterizedType) => isOption(inner.designator)
       case _ => false

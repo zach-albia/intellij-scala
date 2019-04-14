@@ -5,7 +5,7 @@ import org.jetbrains.plugins.scala.base.libraryLoaders.{IvyManagedLoader, Librar
 import org.jetbrains.plugins.scala.debugger.ScalaVersion
 import org.jetbrains.plugins.scala.lang.typeConformance.TypeConformanceTestBase
 
-class ShapelessConformanceTestBase()(override implicit val version: ScalaVersion) extends TypeConformanceTestBase {
+abstract class ShapelessConformanceTestBase()(override implicit val version: ScalaVersion) extends TypeConformanceTestBase {
   override protected def additionalLibraries(): Seq[LibraryLoader] =
     IvyManagedLoader("com.chuusai" %% "shapeless" % "2.3.3") :: Nil
 

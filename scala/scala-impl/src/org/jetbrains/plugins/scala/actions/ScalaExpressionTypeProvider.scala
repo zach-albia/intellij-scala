@@ -48,7 +48,7 @@ class ScalaExpressionTypeProvider extends ExpressionTypeProvider[PsiElement] {
     extractType(element).fold(unknownType) { t: ScType =>
       val original  = "Type"      -> t
       val dealiased = "Dealiased" -> t.removeAliasDefinitions()
-      val widened   = "Widened"   -> t.tryExtractDesignatorSingleton
+      val widened   = "Widened"   -> t.widen
 
       val (expected, withoutImplicits) = element match {
         case expr: ScExpression =>

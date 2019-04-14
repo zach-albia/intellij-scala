@@ -437,7 +437,10 @@ package object extensions {
 
     def projectContext: ProjectContext = element.getProject
 
-    def ofNamedElement(substitutor: ScSubstitutor = ScSubstitutor.empty, scalaScope: Option[ElementScope] = None): Option[ScType] = {
+    def ofNamedElement(
+      substitutor: ScSubstitutor        = ScSubstitutor.empty,
+      scalaScope:  Option[ElementScope] = None
+    ): Option[ScType] = {
       def lift(`type`: PsiType) = Option(`type`.toScType())
 
       val scope = scalaScope.getOrElse(elementScope)

@@ -273,7 +273,7 @@ object ScalaRefactoringUtil {
       val text = s"$prefix$quote$rangeText$quote"
       createExpressionWithContextFromText(text, lit.getContext, lit) match {
         case newExpr: ScLiteral =>
-          val tpe = newExpr.getTypeWithoutImplicits(ignoreBaseTypes = true).getOrAny
+          val tpe = newExpr.getTypeWithoutImplicits(ignoreBaseTypes = true).getOrAny.widen
           Some(newExpr, Array(tpe))
         case _ => None
       }
@@ -296,10 +296,12 @@ object ScalaRefactoringUtil {
     // Handle omitted parentheses in calls to functions with empty parameter list.
     // todo add a test for case with only implicit parameter list.
     val exprType = (element, cachedType) match {
-      case (ReferenceToFunction(func), FunctionType(returnType, _)) if (func: ScFunction).parameters.isEmpty => returnType
+      case (ReferenceToFunction(func), FunctionType(returnType, _)) if (func: ScFunction).parameters.isEmpty =>
+        returnType
       case _ => cachedType
     }
-    val types = addPossibleTypes(exprType, element).map(replaceSingletonTypes)
+
+    val types = addPossibleTypes(exprType, element).map(tpe => replaceSingletonTypes(tpe).widen)
     Some((element, types))
   }
 

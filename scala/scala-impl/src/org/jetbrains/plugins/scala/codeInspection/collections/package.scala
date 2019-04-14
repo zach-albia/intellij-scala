@@ -368,7 +368,7 @@ package object collections {
     expr.`type`().toOption.exists(isOfClassFrom(_, patterns))
 
   def isOfClassFrom(`type`: ScType, patterns: Array[String]): Boolean =
-    `type`.tryExtractDesignatorSingleton.extractClass.exists(qualifiedNameFitToPatterns(_, patterns))
+    `type`.widen.extractClass.exists(qualifiedNameFitToPatterns(_, patterns))
 
   private def qualifiedNameFitToPatterns(clazz: PsiClass, patterns: Array[String]) =
     Option(clazz).flatMap(c => Option(c.qualifiedName))

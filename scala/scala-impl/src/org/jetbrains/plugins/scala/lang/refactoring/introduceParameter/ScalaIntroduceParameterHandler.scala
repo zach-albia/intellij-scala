@@ -34,6 +34,7 @@ import org.jetbrains.plugins.scala.lang.refactoring.introduceParameter.ScalaIntr
 import org.jetbrains.plugins.scala.lang.refactoring.namesSuggester.NameSuggester
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaRefactoringUtil._
 import org.jetbrains.plugins.scala.lang.refactoring.util.{DialogConflictsReporter, ScalaVariableValidator}
+import org.jetbrains.plugins.scala.project.ProjectContext
 import org.jetbrains.plugins.scala.statistics.{FeatureKey, Stats}
 
 /**
@@ -47,7 +48,7 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
 
   override def invoke(file: PsiFile)
                      (implicit project: Project, editor: Editor, dataContext: DataContext): Unit = {
-    val scalaFile = maybeWritableScalaFile(file, REFACTORING_NAME)
+    val scalaFile = maybeWritableScalaFile(file, refactoringName)
       .getOrElse(return)
 
     afterExpressionChoosing(file, "Introduce Parameter") {
@@ -61,8 +62,8 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
     val namesAndTypes = input.map { v =>
       val elem = v.element
       val typeText = elem match {
-        case fun: ScFunction => fun.`type`().getOrAny.canonicalCodeText
-        case _ => v.element.ofNamedElement().getOrElse(Any).canonicalCodeText
+        case fun: ScFunction => fun.`type`().getOrAny.widen.canonicalCodeText
+        case _               => v.element.ofNamedElement().getOrElse(Any).widen.canonicalCodeText
       }
       s"${elem.name}: $typeText"
     }
@@ -123,7 +124,7 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
     try {
       if (!editor.getSelectionModel.hasSelection) return None
 
-      val scalaFile = writableScalaFile(file, REFACTORING_NAME)
+      val scalaFile = writableScalaFile(file, refactoringName)
 
       val exprWithTypes = getExpressionWithTypes(scalaFile)
       val elems = exprWithTypes match {
@@ -132,9 +133,9 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
       }
 
       elems match {
-        case seq if showNotPossibleWarnings(seq, REFACTORING_NAME) => None
+        case seq if showNotPossibleWarnings(seq, refactoringName) => None
         case seq if haveReturnStmts(seq) =>
-          showErrorHint("Refactoring is not supported: selection contains return statement", REFACTORING_NAME)
+          showErrorHint("Refactoring is not supported: selection contains return statement", refactoringName)
           None
         case seq => Some((exprWithTypes, seq))
       }
@@ -145,8 +146,13 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
   }
 
 
-  def collectData(exprWithTypes: ExprWithTypes, elems: Seq[PsiElement], methodLike: ScMethodLike, editor: Editor): Option[ScalaIntroduceParameterData] = {
-    implicit val project = methodLike.getProject
+  def collectData(
+    exprWithTypes: ExprWithTypes,
+    elems:         Seq[PsiElement],
+    methodLike:    ScMethodLike,
+    editor:        Editor
+  ): Option[ScalaIntroduceParameterData] = {
+    implicit val project: ProjectContext = methodLike.getProject
 
     val info = ReachingDefintionsCollector.collectVariableInfo(elems, methodLike)
     val input = info.inputVariables
@@ -156,21 +162,23 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
         val argClauseText = input.map(_.element.name).mkString("(", ", ", ")")
         val allTypes = funType match {
           case FunctionType(retType, _) => Array(funType, retType, Any)
-          case _ => Array(funType, Any)
+          case _                        => Array(funType, Any)
         }
         (allTypes, funExpr.getText, argClauseText)
       }
       else (exprWithTypes.get._2, exprWithTypes.get._1.getText, "")
 
     val superMethod = methodLike.findDeepestSuperMethod() match {
-      case null => methodLike
+      case null            => methodLike
       case _: ScMethodLike => SuperMethodWarningUtil.checkSuperMethod(methodLike, RefactoringBundle.message("to.refactor"))
-      case _ => methodLike
+      case _               => methodLike
     }
+
     val methodToSearchFor: ScMethodLike = superMethod match {
       case m: ScMethodLike => m
-      case _ => return None
+      case _               => return None
     }
+
     if (!CommonRefactoringUtil.checkReadOnlyStatus(project, superMethod)) return None
 
     val suggestedName = {
@@ -250,18 +258,16 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
     }
   }
 
-  private def getTextForElement(method: ScMethodLike): String = {
-    method match {
-      case pc: ScPrimaryConstructor => s"${pc.containingClass.name} (primary constructor)"
-      case (f: ScFunctionDefinition) && ContainingClass(_: ScNewTemplateDefinition) => s"${f.name} (in anonymous class)"
-      case (f: ScFunctionDefinition) && ContainingClass(c) => s"${f.name} (in ${c.name})"
-      case f: ScFunctionDefinition => s"${f.name}"
-    }
+  private def getTextForElement(method: ScMethodLike): String = method match {
+    case pc: ScPrimaryConstructor                                                 => s"${pc.containingClass.name} (primary constructor)"
+    case (f: ScFunctionDefinition) && ContainingClass(_: ScNewTemplateDefinition) => s"${f.name} (in anonymous class)"
+    case (f: ScFunctionDefinition) && ContainingClass(c)                          => s"${f.name} (in ${c.name})"
+    case f: ScFunctionDefinition                                                  => s"${f.name}"
   }
 
   private def toHighlight(e: PsiElement) = e match {
     case pc: ScPrimaryConstructor => pc.containingClass.extendsBlock
-    case _ => e
+    case _                        => e
   }
 
   private def afterMethodChoosing(element: PsiElement)
@@ -270,19 +276,18 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
     val validEnclosingMethods: Seq[ScMethodLike] = getEnclosingMethods(element)
     if (validEnclosingMethods.size > 1 && !ApplicationManager.getApplication.isUnitTestMode) {
       showChooser[ScMethodLike](editor, validEnclosingMethods.toArray, action,
-        s"Choose function for $REFACTORING_NAME", getTextForElement, toHighlight)
+        s"Choose function for $refactoringName", getTextForElement, toHighlight)
     }
     else if (validEnclosingMethods.size == 1 || ApplicationManager.getApplication.isUnitTestMode) {
       action(validEnclosingMethods.head)
     } else {
-      showErrorHint(ScalaBundle.message("cannot.refactor.no.function"), REFACTORING_NAME)
+      showErrorHint(ScalaBundle.message("cannot.refactor.no.function"), refactoringName)
     }
   }
 
-  private def isLibraryInterfaceMethod(method: PsiMethod): Boolean = {
+  private def isLibraryInterfaceMethod(method: PsiMethod): Boolean =
     (method.hasModifierPropertyScala(PsiModifier.ABSTRACT) || method.isInstanceOf[ScFunctionDefinition]) &&
       !method.getManager.isInProject(method)
-  }
 
   private def haveReturnStmts(elems: Seq[PsiElement]): Boolean = {
     for {
@@ -297,5 +302,5 @@ class ScalaIntroduceParameterHandler extends ScalaRefactoringActionHandler with 
 }
 
 object ScalaIntroduceParameterHandler {
-  val REFACTORING_NAME = ScalaBundle.message("introduce.parameter.title")
+  val refactoringName: String = ScalaBundle.message("introduce.parameter.title")
 }

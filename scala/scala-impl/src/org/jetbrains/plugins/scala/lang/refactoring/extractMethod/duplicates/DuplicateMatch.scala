@@ -89,7 +89,7 @@ class DuplicateMatch(pattern: DuplicatePattern, val candidates: Seq[PsiElement])
 
   private def typesEquiv(expr1: ScExpression, expr2: ScExpression) =
     (expr1.`type`(), expr2.`type`()) match {
-      case (Right(t1), Right(t2))   => t1.tryExtractDesignatorSingleton.equiv(t2.tryExtractDesignatorSingleton)
+      case (Right(t1), Right(t2))   => t1.widen.equiv(t2.widen)
       case (Failure(_), Failure(_)) => true
       case _                        => false
     }

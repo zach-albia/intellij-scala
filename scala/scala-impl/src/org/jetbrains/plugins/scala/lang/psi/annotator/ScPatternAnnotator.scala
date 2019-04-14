@@ -165,12 +165,11 @@ object ScPatternAnnotator {
   }
 
   private def widen(scType: ScType): ScType = scType match {
-    case designatorOwner: DesignatorOwner if designatorOwner.isSingleton =>
-      scType.tryExtractDesignatorSingleton
+    case designatorOwner: DesignatorOwner if designatorOwner.isSingleton => scType.widen
     case _ =>
       scType.updateLeaves {
         case ScAbstractType(_, _, upper) => upper
-        case tpt: TypeParameterType => tpt.upperType
+        case tpt: TypeParameterType      => tpt.upperType
       }
   }
 

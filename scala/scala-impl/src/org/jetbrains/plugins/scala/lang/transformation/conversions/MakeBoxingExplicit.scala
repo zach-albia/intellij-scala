@@ -37,7 +37,7 @@ class MakeBoxingExplicit extends AbstractTransformer {
 
   protected def transformation(implicit project: ProjectContext): PartialFunction[PsiElement, Unit] = {
     case (e: ScExpression) && Typeable(t) && ExpectedType(et)
-      if boxMethodName(t).nonEmpty && et != AnyRef && et != t && !isSpecializedFor(et, t) =>
+      if boxMethodName(t).nonEmpty && et != AnyRef && et != t.widen && !isSpecializedFor(et, t.widen) =>
 
       val target = s"$Class.${boxMethodName(t).get}"
 

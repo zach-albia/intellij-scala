@@ -68,7 +68,7 @@ object ComparingUnrelatedTypesInspection {
   @tailrec
   private def extractActualType(`type`: ScType): ScType = `type`.isAliasType match {
     case Some(AliasType(_, Right(rhs), _)) => extractActualType(rhs)
-    case _ => `type`.tryExtractDesignatorSingleton
+    case _                                 => `type`.widen
   }
 }
 
@@ -82,7 +82,7 @@ class ComparingUnrelatedTypesInspection extends AbstractInspection(inspectionNam
         case _ => false
       }
       if (needHighlighting) {
-        Seq(left, right).map(_.`type`().map(_.tryExtractDesignatorSingleton)) match {
+        Seq(left, right).map(_.`type`().map(_.widen)) match {
           case Seq(Right(leftType), Right(rightType)) if cannotBeCompared(leftType, rightType) =>
             val message = generateComparingUnrelatedTypesMsg(leftType, rightType)
             holder.registerProblem(expr, message, ProblemHighlightType.GENERIC_ERROR_OR_WARNING)
@@ -91,7 +91,7 @@ class ComparingUnrelatedTypesInspection extends AbstractInspection(inspectionNam
       }
     case MethodRepr(_, Some(baseExpr), Some(ResolvesTo(fun: ScFunction)), Seq(arg, _*)) if mayNeedHighlighting(fun) =>
       for {
-        ParameterizedType(_, Seq(elemType)) <- baseExpr.`type`().toOption.map(_.tryExtractDesignatorSingleton)
+        ParameterizedType(_, Seq(elemType)) <- baseExpr.`type`().toOption.map(_.widen)
         argType <- arg.`type`().toOption
         if cannotBeCompared(elemType, argType)
       } {
@@ -100,7 +100,7 @@ class ComparingUnrelatedTypesInspection extends AbstractInspection(inspectionNam
       }
     case IsInstanceOfCall(call) =>
       val qualType = call.referencedExpr match {
-        case ScReferenceExpression.withQualifier(q) => q.`type`().map(_.tryExtractDesignatorSingleton).toOption
+        case ScReferenceExpression.withQualifier(q) => q.`type`().map(_.widen).toOption
         case _ => None
       }
       val argType = call.arguments.headOption.flatMap(_.`type`().toOption)
@@ -115,9 +115,7 @@ class ComparingUnrelatedTypesInspection extends AbstractInspection(inspectionNam
   }
 
   private def generateComparingUnrelatedTypesMsg(firstType: ScType, secondType: ScType): String = {
-    val nonSingleton1 = firstType.extractDesignatorSingleton.getOrElse(firstType)
-    val nonSingleton2 = secondType.extractDesignatorSingleton.getOrElse(secondType)
-    val (firstTypeText, secondTypeText) = ScTypePresentation.different(nonSingleton1, nonSingleton2)
+    val (firstTypeText, secondTypeText) = ScTypePresentation.different(firstType.widen, secondType.widen)
     InspectionBundle.message("comparing.unrelated.types.hint", firstTypeText, secondTypeText)
   }
 

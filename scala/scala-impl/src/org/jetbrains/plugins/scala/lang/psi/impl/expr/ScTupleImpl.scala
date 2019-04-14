@@ -21,8 +21,8 @@ class ScTupleImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScTuple
       case Seq()      => Unit
       case components =>
         lazy val expectedComponents = this.expectedType() match {
-          case TupleType(comps) => comps
-          case _                => Seq.empty
+          case Some(TupleType(comps)) => comps
+          case _                      => Seq.empty
         }
 
         val widenedComponents = components.zipWithIndex.map {
