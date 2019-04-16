@@ -63,8 +63,7 @@ final class ScalaGlobalMembersCompletionContributor extends ScalaCompletionContr
             if (finder == null) return
 
             val lookupItems = finder.lookupItems(parameters.getOriginalFile)
-            if (CompletionService.getCompletionService.getAdvertisementText != null &&
-              lookupItems.exists(!_.shouldImport)) {
+            if (lookupItems.exists(!_.shouldImport)) {
               hintString.foreach(resultSet.addLookupAdvertisement)
             }
 
