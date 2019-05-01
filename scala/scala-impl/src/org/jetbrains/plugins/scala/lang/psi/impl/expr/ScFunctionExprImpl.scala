@@ -10,15 +10,17 @@ import com.intellij.psi.scope._
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaPsiElement
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScParameter, ScParameters}
-import org.jetbrains.plugins.scala.lang.psi.types.{ScLiteralType, ScType, api}
-import org.jetbrains.plugins.scala.lang.psi.types.api.FunctionType
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScFunctionExprCfgBuildingImpl
+import org.jetbrains.plugins.scala.lang.psi.types.api.{FunctionType, Singleton}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
-import org.jetbrains.plugins.scala.lang.psi.types.api.Singleton
+import org.jetbrains.plugins.scala.lang.psi.types.{ScLiteralType, ScType, api}
 
 /**
   * @author Alexander Podkhalyuzin
   */
-class ScFunctionExprImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScFunctionExpr {
+class ScFunctionExprImpl(node: ASTNode)
+  extends ScExpressionImplBase(node)
+    with ScFunctionExpr with ScFunctionExprCfgBuildingImpl {
 
   def parameters: Seq[ScParameter] = params.params
 

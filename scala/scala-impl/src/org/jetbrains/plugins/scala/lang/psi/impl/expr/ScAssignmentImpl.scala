@@ -9,6 +9,7 @@ import com.intellij.psi.PsiField
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScClassParameter
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScVariable}
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScAssignmentCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.types.api.Unit
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 import org.jetbrains.plugins.scala.lang.refactoring.util.ScalaNamesUtil
@@ -19,7 +20,9 @@ import org.jetbrains.plugins.scala.macroAnnotations.{Cached, ModCount}
 /**
   * @author Alexander Podkhalyuzin
   */
-class ScAssignmentImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScAssignment {
+class ScAssignmentImpl(node: ASTNode)
+  extends ScExpressionImplBase(node)
+    with ScAssignment with ScAssignmentCfgBuildingImpl {
 
   protected override def innerType: TypeResult = {
     leftExpression match {
