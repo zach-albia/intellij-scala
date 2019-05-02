@@ -10,6 +10,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.{ScConstructorInvocation, S
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScUnderScoreSectionUtil.isUnderscore
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.ScTemplateBody
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScUnderscoreSectionCfgBuildingImpl
 
 import scala.annotation.tailrec
 
@@ -17,7 +18,7 @@ import scala.annotation.tailrec
 * @author Alexander Podkhalyuzin
 * Date: 06.03.2008
 */
-trait ScUnderscoreSection extends ScExpression {
+trait ScUnderscoreSection extends ScExpression with ScUnderscoreSectionCfgBuildingImpl {
   def bindingExpr: Option[ScExpression] = {
     findChildByClassScala(classOf[ScExpression]) match {
       case null => None
