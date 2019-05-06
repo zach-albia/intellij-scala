@@ -5,6 +5,7 @@ package api
 package expr
 
 import com.intellij.psi.PsiElement
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScMethodCallCfgBuildingImpl
 
 import scala.annotation.tailrec
 
