@@ -254,6 +254,14 @@ class ScalaResolveResult(val element: PsiNamedElement,
     precedence
   }
 
+
+  def mostInnerResolveResult: ScalaResolveResult = {
+    var cur = this
+    while (cur.innerResolveResult.isDefined)
+      cur = cur.innerResolveResult.get
+    cur
+  }
+
   //for name-based extractor
   def isEmpty: Boolean = false
   def get: ScalaResolveResult = this
