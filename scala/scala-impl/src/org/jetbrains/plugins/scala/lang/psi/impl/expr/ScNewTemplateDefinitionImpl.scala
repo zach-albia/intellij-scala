@@ -20,6 +20,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScDeclaredElementsHolder, ScTypeAlias}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.ScEarlyDefinitions
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.ScTemplateBody
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScNewTemplateDefinitionCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory.createExpressionWithContextFromText
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.ScTemplateDefinitionImpl
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScTemplateDefinitionStub
@@ -38,7 +39,7 @@ final class ScNewTemplateDefinitionImpl(stub: ScTemplateDefinitionStub[ScNewTemp
                                         node: ASTNode,
                                         debugName: String)
   extends ScTemplateDefinitionImpl(stub, nodeType, node, debugName)
-    with ScNewTemplateDefinition {
+    with ScNewTemplateDefinition with ScNewTemplateDefinitionCfgBuildingImpl {
 
   override protected def targetTokenType: ScalaTokenType = ScalaTokenType.NewKeyword
 
