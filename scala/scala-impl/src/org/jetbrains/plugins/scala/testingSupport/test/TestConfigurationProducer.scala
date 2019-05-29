@@ -1,7 +1,6 @@
 package org.jetbrains.plugins.scala
 package testingSupport.test
 
-import javax.swing.ListCellRenderer
 import com.intellij.execution.Location
 import com.intellij.execution.actions.{ConfigurationContext, ConfigurationFromContext, RunConfigurationProducer}
 import com.intellij.execution.configurations.ConfigurationType
@@ -17,6 +16,7 @@ import com.intellij.openapi.util.{Condition, Ref}
 import com.intellij.psi._
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.ui.components.JBList
+import javax.swing.ListCellRenderer
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.jetbrains.plugins.scala.util.UIFreezingGuard
@@ -27,7 +27,9 @@ import scala.collection.JavaConverters._
  * @author Roman.Shein
  *         Date: 11.12.13
  */
-abstract class TestConfigurationProducer(configurationType: ConfigurationType) extends RunConfigurationProducer[AbstractTestRunConfiguration](configurationType) with AbstractTestConfigurationProducer{
+abstract class TestConfigurationProducer(configurationType: ConfigurationType)
+  extends RunConfigurationProducer[AbstractTestRunConfiguration](configurationType)
+    with AbstractTestConfigurationProducer {
 
   protected def isObjectInheritor(clazz: ScTypeDefinition, fqn: String): Boolean =
     clazz.elementScope.getCachedObject(fqn)
@@ -90,7 +92,6 @@ abstract class TestConfigurationProducer(configurationType: ConfigurationType) e
             val testClass = testData.getClassPathClazz
             if (!(config.isInvalidSuite(testClass) &&
               new InheritorChooser() {
-
                 override def runMethodInAbstractClass(context: ConfigurationContext, performRunnable: Runnable,
                                                       psiMethod: PsiMethod, containingClass: PsiClass,
                                                       acceptAbstractCondition: Condition[PsiClass]): Boolean = {
