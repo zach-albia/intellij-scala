@@ -39,8 +39,6 @@ import org.jetbrains.plugins.scala.testingSupport.locationProvider.ScalaTestLoca
 import org.jetbrains.plugins.scala.testingSupport.test.AbstractTestRunConfiguration.{PropertiesExtension, SettingEntry, SettingMap}
 import org.jetbrains.plugins.scala.testingSupport.test.TestRunConfigurationForm.SearchForTest
 import org.jetbrains.plugins.scala.testingSupport.test.sbt.{SbtProcessHandlerWrapper, SbtTestEventHandler}
-import org.jetbrains.plugins.scala.testingSupport.{ScalaTestingConfiguration, TestWorkingDirectoryProvider}
-import org.jetbrains.plugins.scala.util.ScalaUtil
 import org.jetbrains.sbt.SbtUtil
 import org.jetbrains.sbt.shell.{SbtProcessManager, SbtShellCommunication, SettingQueryHandler}
 
@@ -334,7 +332,10 @@ abstract class AbstractTestRunConfiguration(val project: Project,
     }
   }
 
-  protected def escapeTestName(test: String): String = if (test.contains(" ")) "\"" + test + "\"" else test
+  protected def escapeTestName(test: String): String = {
+    if (test.contains(" ")) s""""$test""""
+    else test
+  }
 
   protected def escapeClassAndTest(input: String): String = input
 
@@ -345,7 +346,7 @@ abstract class AbstractTestRunConfiguration(val project: Project,
     }).flatten.toSeq
   }
 
-  protected[test] def classNotFoundError = {
+  protected[test] def classNotFoundError: Nothing = {
     throw new ExecutionException(s"Test class not found: $getTestClassPath")
   }
 

@@ -730,8 +730,8 @@ class ScalaTestConfigurationProducer extends {
     if (selection != null) {
       if (selection.testNames.nonEmpty) {
         val testNames = selection.testNames.toSeq.map(_.trim)
-        val testNamesEscapedAndConcat = testNames.map(escapeTestName).mkString("\n")
-        (clazz, testNamesEscapedAndConcat)
+        val testNamesConcat = testNames.mkString("\n")
+        (clazz, testNamesConcat)
       } else {
         val parent = location.getPsiElement.getParent
         if (parent != null) getLocationClassAndTest(new PsiLocation(location.getProject, parent))
@@ -740,12 +740,5 @@ class ScalaTestConfigurationProducer extends {
     } else {
       oldResult
     }
-  }
-
-  private def escapeTestName(testName: String): String = {
-    testName
-      .replace("\\", "\\\\")
-      .replace("\n", "\\n")
-      .replace("\r", "\\r")
   }
 }
