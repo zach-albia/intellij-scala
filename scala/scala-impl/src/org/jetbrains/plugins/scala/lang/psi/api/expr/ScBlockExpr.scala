@@ -7,6 +7,8 @@ package expr
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.ScCaseClauses
 import org.jetbrains.plugins.scala.lang.psi.controlFlow.Instruction
+import org.jetbrains.plugins.scala.lang.psi.types.api.TupleType
+import org.jetbrains.plugins.scala.lang.psi.types.{FunctionLikeType, ScType, api}
 
 /**
 * @author Alexander Podkhalyuzin
@@ -38,5 +40,22 @@ object ScBlockExpr {
 
   object Statements {
     def unapplySeq(e: ScBlockExpr): Some[Seq[ScBlockStatement]] = Some(e.statements)
+  }
+
+  implicit final class ScBlockExprExt(val blockExpr: ScBlockExpr) extends AnyVal {
+    def caseClauseIncomingType(implicit scope: ElementScope): Option[ScType] = {
+      val functionLikeType = FunctionLikeType(blockExpr)
+
+      blockExpr.expectedType(fromUnderscore = false) match {
+        case Some(et) =>
+          et.removeAbstracts match {
+            case functionLikeType(_, _, Seq())   => Some(api.Unit)
+            case functionLikeType(_, _, Seq(p0)) => Some(p0)
+            case functionLikeType(_, _, params)  => Some(TupleType(params))
+            case _                               => None
+          }
+        case None => None
+      }
+    }
   }
 }

@@ -134,18 +134,7 @@ object ScPattern {
             val thr = psiManager.getCachedClass(elementScope.scope, "java.lang.Throwable")
             thr.map(ScalaType.designator(_))
           case b: ScBlockExpr =>
-            val functionLikeType = FunctionLikeType(b)
-
-            b.expectedType(fromUnderscore = false) match {
-              case Some(et) =>
-                et.removeAbstracts match {
-                  case functionLikeType(_, _, Seq())   => Some(api.Unit)
-                  case functionLikeType(_, _, Seq(p0)) => Some(p0)
-                  case functionLikeType(_, _, params)  => Some(TupleType(params))
-                  case _                               => None
-                }
-              case None => None
-            }
+            b.caseClauseIncomingType
           case _ => None
         }
         case named: ScNamingPattern => named.expectedType
