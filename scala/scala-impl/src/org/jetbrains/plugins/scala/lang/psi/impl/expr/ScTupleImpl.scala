@@ -6,15 +6,15 @@ package expr
 
 import com.intellij.lang.ASTNode
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScTupleCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.types.ScLiteralType
-import org.jetbrains.plugins.scala.lang.psi.types.api.{TupleType, Unit}
+import org.jetbrains.plugins.scala.lang.psi.types.api.{Singleton, TupleType, Unit}
 import org.jetbrains.plugins.scala.lang.psi.types.result._
-import org.jetbrains.plugins.scala.lang.psi.types.api.Singleton
 
 /**
  * @author ilyas, Alexander Podkhalyuzin
  */
-class ScTupleImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScTuple {
+class ScTupleImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScTuple with ScTupleCfgBuildingImpl {
 
   protected override def innerType: TypeResult =
     Right(exprs.map(_.`type`().getOrAny) match {
