@@ -8,13 +8,14 @@ import com.intellij.lang.ASTNode
 import com.intellij.psi.PsiElement
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes.kRETURN
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScReturnCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.types.api.Nothing
 import org.jetbrains.plugins.scala.lang.psi.types.result._
 
 /**
   * @author Alexander Podkhalyuzin
   */
-class ScReturnImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScReturn {
+class ScReturnImpl(node: ASTNode) extends ScExpressionImplBase(node) with ScReturn with ScReturnCfgBuildingImpl {
 
   override def keyword: PsiElement = findChildByType(kRETURN)
 

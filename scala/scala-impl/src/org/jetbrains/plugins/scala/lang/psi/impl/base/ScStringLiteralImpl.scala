@@ -13,6 +13,7 @@ import com.intellij.psi.tree.IElementType
 import org.apache.commons.lang.StringEscapeUtils
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScLiteral
 import org.jetbrains.plugins.scala.lang.psi.api.base.literals.ScStringLiteral
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScLiteralCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.impl.base.literals.QuotedLiteralImplBase
 import org.jetbrains.plugins.scala.lang.psi.types._
 
@@ -23,7 +24,10 @@ import org.jetbrains.plugins.scala.lang.psi.types._
 class ScStringLiteralImpl(node: ASTNode,
                           override val toString: String)
   extends QuotedLiteralImplBase(node, toString)
-    with ScStringLiteral {
+    with ScStringLiteral
+    with ContributedReferenceHost
+    with PsiLanguageInjectionHost
+    with ScLiteralCfgBuildingImpl {
 
   import QuotedLiteralImplBase._
   import ScStringLiteralImpl._

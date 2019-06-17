@@ -9,12 +9,13 @@ import com.intellij.lang.ASTNode
 import com.intellij.openapi.util.TextRange
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaElementVisitor
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScLiteral
+import org.jetbrains.plugins.scala.lang.psi.controlFlow.impl.expr.ScLiteralCfgBuildingImpl
 import org.jetbrains.plugins.scala.lang.psi.types.{ScLiteralType, result}
 
 abstract class ScLiteralImplBase(node: ASTNode,
                                  override val toString: String)
   extends expr.ScExpressionImplBase(node)
-    with ScLiteral {
+    with ScLiteral with ScLiteralCfgBuildingImpl {
 
   protected def wrappedValue(value: V): ScLiteral.Value[V]
 
