@@ -16,6 +16,7 @@ import org.jetbrains.plugins.scala.lang.psi.api.base.{ScInterpolatedStringLitera
 import org.jetbrains.plugins.scala.lang.psi.api.expr._
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
 
+import scala.collection.immutable.StringLike
 import scala.collection.mutable.ArrayBuffer
 
 object MultilineStringUtil {
@@ -82,9 +83,9 @@ object MultilineStringUtil {
    */
   def looksLikeUsesMargins(literal: ScLiteral): Boolean = {
     val text = literal.contentText
-    val lines = text.lines
+    val lines = augmentString(text).lines
       .map(_.trim)
-      .filterNot(_.isEmpty)
+      .filterNot(! _.isEmpty)
 
     literal match {
       case WithStrippedMargin(_, marginChar) =>
