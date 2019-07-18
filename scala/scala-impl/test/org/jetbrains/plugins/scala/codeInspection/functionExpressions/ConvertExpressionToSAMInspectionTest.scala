@@ -20,10 +20,13 @@ class ConvertExpressionToSAMInspectionTest extends ScalaQuickFixTestBase {
   override protected def setUp(): Unit = {
     super.setUp()
 
-    val defaultProfile = ScalaCompilerConfiguration.instanceIn(getProject).defaultProfile
-    val newSettings = defaultProfile.getSettings
-    newSettings.experimental = true
-    defaultProfile.setSettings(newSettings)
+    // experimental activates SAM in 2.11
+    if (version == Scala_2_11) {
+      val defaultProfile = ScalaCompilerConfiguration.instanceIn(getProject).defaultProfile
+      val newSettings = defaultProfile.getSettings
+      newSettings.experimental = true
+      defaultProfile.setSettings(newSettings)
+    }
   }
 
   override protected val classOfInspection: Class[_ <: LocalInspectionTool] = classOf[ConvertExpressionToSAMInspection]

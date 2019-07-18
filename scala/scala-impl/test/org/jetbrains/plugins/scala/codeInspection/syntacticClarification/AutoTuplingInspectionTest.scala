@@ -1,8 +1,10 @@
-package org.jetbrains.plugins.scala.codeInspection.syntacticClarification
+package org.jetbrains.plugins.scala
+package codeInspection
+package syntacticClarification
 
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.testFramework.EditorTestUtil
-import org.jetbrains.plugins.scala.codeInspection.ScalaQuickFixTestBase
+import org.jetbrains.plugins.scala.project.settings.ScalaCompilerConfiguration
 
 /**
   * Author: Svyatoslav Ilinskiy
@@ -19,6 +21,19 @@ class AutoTuplingInspectionTest extends ScalaQuickFixTestBase {
     AutoTuplingInspection.message
 
   val hint = MakeTuplesExplicitFix.hint
+
+
+  override protected def setUp(): Unit = {
+    super.setUp()
+
+    // experimental activates SAM in 2.11
+    if (version == Scala_2_11) {
+      val defaultProfile = ScalaCompilerConfiguration.instanceIn(getProject).defaultProfile
+      val newSettings = defaultProfile.getSettings
+      newSettings.experimental = true
+      defaultProfile.setSettings(newSettings)
+    }
+  }
 
   def testBasic(): Unit = {
     val text =
