@@ -636,7 +636,8 @@ object MethodResolveProcessor {
 
     if (isShapeResolve) {
       if (filtered.isEmpty) {
-        if (enableTupling) {
+        val callCannotBeTupling = argumentClauses.forall(_.length == 1)
+        if (enableTupling && !callCannotBeTupling) {
           val filtered2 = input.filter(r => {
             r.element match {
               case fun: ScFun if fun.paramClauses.nonEmpty =>
