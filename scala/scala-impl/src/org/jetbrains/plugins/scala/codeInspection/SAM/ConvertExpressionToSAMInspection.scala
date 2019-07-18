@@ -8,7 +8,6 @@ import org.jetbrains.plugins.scala.codeInspection.SAM.ConvertExpressionToSAMInsp
 import org.jetbrains.plugins.scala.codeInspection.{AbstractFixOnPsiElement, AbstractInspection, InspectionBundle}
 import org.jetbrains.plugins.scala.extensions.PsiElementExt
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
-import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScExpression, ScInfixExpr, ScNewTemplateDefinition}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunctionDefinition
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScParameterClause
@@ -46,7 +45,7 @@ class ConvertExpressionToSAMInspection extends AbstractInspection(inspectionName
       .exists(hasSingleFunction)
   }
 
-  private def inspectAccordingToExpectedType(expected: ScType, definition: ScNewTemplateDefinition, holder: ProblemsHolder) {
+  private def inspectAccordingToExpectedType(expected: ScType, definition: ScNewTemplateDefinition, holder: ProblemsHolder): Unit = {
     definition.membersWithSynthetic match {
       case Seq(fun: ScFunctionDefinition) =>
         def containsReturn(expr: ScExpression): Boolean = {
@@ -106,6 +105,6 @@ class ReplaceExpressionWithSAMQuickFix(elem: PsiElement, replacement: => String)
 }
 
 object ConvertExpressionToSAMInspection {
-  val inspectionName = InspectionBundle.message("convert.expression.to.sam")
-  val inspectionId = "ConvertExpressionToSAM"
+  val inspectionName: String = InspectionBundle.message("convert.expression.to.sam")
+  val inspectionId: String = "ConvertExpressionToSAM"
 }
