@@ -26,8 +26,12 @@ import org.jetbrains.plugins.scala.icons.Icons
 import org.jetbrains.plugins.scala.statistics.{FeatureKey, Stats}
 import org.jetbrains.plugins.scala.project.ProjectExt
 import org.jetbrains.sbt.shell.SbtShellRunner._
+import ShellUIUtil._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
+
 
 class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Option[RemoteConnection])
   extends AbstractConsoleRunnerWithHistory[LanguageConsoleImpl](project, consoleTitle, project.baseDir.getCanonicalPath)
@@ -37,8 +41,10 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
 
   private val toolWindowTitle = project.getName
 
-  private lazy val sbtConsoleView: SbtShellConsoleView =
-    ShellUIUtil.inUIsync {
+  private val initialized = Promise[Boolean]()
+
+  private lazy val sbtConsoleView: Future[SbtShellConsoleView] =
+    inUIasync {
       val cv = SbtShellConsoleView(project, debugConnection)
       Disposer.register(this, cv)
       cv
@@ -56,8 +62,8 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
 
   override def createProcessHandler(process: Process): OSProcessHandler = myProcessHandler
 
-  override def getConsoleView: LanguageConsoleImpl = sbtConsoleView
-  override def createConsoleView(): LanguageConsoleImpl = sbtConsoleView
+  private[shell] override def getConsoleView: LanguageConsoleImpl = sbtConsoleView
+  private override def createConsoleView(): LanguageConsoleImpl = sbtConsoleView
 
   override def createProcess(): Process = myProcessHandler.getProcess
 
@@ -65,10 +71,9 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
   override def createContentDescriptorAndActions(): Unit =
     if (notInTest) super.createContentDescriptorAndActions()
 
-  override def initAndRun(): Unit = {
+  override def initAndRun(): Future[Unit] = sbtConsoleView.flatMap { sbtConsoleView =>
     super.initAndRun()
-    import ShellUIUtil.inUI
-    inUI {
+    inUIasync {
 
       // on Windows the terminal defaults to 80 columns which wraps and breaks highlighting.
       // Use a wider value that should be reasonable in most cases. Has no effect on Unix.
@@ -85,7 +90,7 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
       // this is not correct when shell process was started without view, but we avoid that
       sbtConsoleView.setPrompt("(initializing) >")
 
-      def scrollToEnd(): Unit = inUI {
+      def scrollToEnd(): Unit = inUIasync {
         val editor = getConsoleView.getHistoryViewer
         if (!editor.isDisposed)
           EditorUtil.scrollToTheEnd(editor)
@@ -111,8 +116,9 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
           twm <- Option(ToolWindowManager.getInstance(project))
           toolWindow <- Option(twm.getToolWindow(SbtShellToolWindowFactory.ID))
         } yield {
-          val content = createToolWindowContent
-          addToolWindowContent(toolWindow, content)
+          createToolWindowContent.foreach { content =>
+            addToolWindowContent(toolWindow, content)
+          }
         }
         if (contentCreated.isEmpty) {
           log.error(s"Failed to create sbt shell toolwindow content for $project.")
@@ -142,7 +148,13 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
   override def showConsole(defaultExecutor: Executor, contentDescriptor: RunContentDescriptor): Unit =
     openShell(contentDescriptor.isAutoFocusContent)
 
-  def openShell(focus: Boolean): Unit = ShellUIUtil.inUI {
+  def isRunning: Boolean = ! (
+    getProcessHandler == null ||
+    getProcessHandler.isProcessTerminating ||
+    getProcessHandler.isProcessTerminated
+    )
+
+  def openShell(focus: Boolean): Unit = inUIasync {
     for {
       twm <- Option(ToolWindowManager.getInstance(project))
       toolWindow <- Option(twm.getToolWindow(SbtShellToolWindowFactory.ID))
@@ -157,7 +169,7 @@ class SbtShellRunner(project: Project, consoleTitle: String, debugConnection: Op
     twContentManager.addContent(content)
   }
 
-  private def createToolWindowContent: Content = {
+  private def createToolWindowContent: Future[Content] = sbtConsoleView.map { sbtConsoleView =>
     //Create runner UI layout
     val factory = RunnerLayoutUi.Factory.getInstance(project)
     val layoutUi = factory.create("sbt-shell-toolwindow-runner", "", "session", project)

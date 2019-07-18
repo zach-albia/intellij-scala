@@ -350,7 +350,6 @@ class SbtProcessManager(project: Project) extends ProjectComponent {
 
     val title = project.getName
     val runner = new SbtShellRunner(project, title, debugConnection)
-    runner.createConsoleView() // force creation now so that it's not null later and to avoid UI hanging
 
     val pd = ProcessData(handler, runner)
 
@@ -372,7 +371,7 @@ class SbtProcessManager(project: Project) extends ProjectComponent {
   def acquireShellRunner: SbtShellRunner = processData.synchronized {
 
     processData match {
-      case Some(ProcessData(_, runner)) if runner.getConsoleView.isRunning =>
+      case Some(ProcessData(_, runner)) if runner.isRunning =>
         runner
       case _ =>
         updateProcessData().runner

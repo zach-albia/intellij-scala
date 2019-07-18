@@ -1,16 +1,23 @@
 package org.jetbrains.sbt.shell
 
-import com.intellij.openapi.util.Computable
-import com.intellij.util.ui.UIUtil
+import java.util.concurrent.atomic.AtomicReference
 
-/**
-  * Created by jast on 2017-02-16.
-  */
+import com.intellij.openapi.application.ApplicationManager
+
+import scala.concurrent.{Future, Promise}
+import scala.util.Try
+
 object ShellUIUtil {
-  def inUI(f: =>Unit): Unit = {
-    UIUtil.invokeLaterIfNeeded(() => f)
+
+  def inUIasync[T](f: =>T): Future[T] = {
+    val p = Promise[T]()
+    ApplicationManager.getApplication.invokeLater(() => p.complete(Try(f)))
+    p.future
   }
+
   def inUIsync[T](f: =>T): T = {
-    UIUtil.invokeAndWaitIfNeeded(() => f)
+    val p = new AtomicReference[T]
+    ApplicationManager.getApplication.invokeAndWait(() => p.set(f))
+    p.get()
   }
 }
