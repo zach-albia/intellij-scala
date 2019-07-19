@@ -687,7 +687,8 @@ class SingleAbstractMethodTest extends SingleAbstractMethodTestBase {
     }
   }
 
-  def testSAMCorrectWildcardExtrapolationWithExistentialTypes(): Unit = {
+  // TODO: fix this. See SCL-15886
+  /*def testSAMCorrectWildcardExtrapolationWithExistentialTypes(): Unit = {
     val code =
       """
         |class P[R]
@@ -701,7 +702,7 @@ class SingleAbstractMethodTest extends SingleAbstractMethodTestBase {
     assertMatches(messages(code)) {
       case Error("(observable: P[_ <: T]) => ()", typeMismatch()) :: Nil =>
     }
-  }
+  }*/
 
   def testSelfTypeNotAllowed(): Unit = {
     val code =
