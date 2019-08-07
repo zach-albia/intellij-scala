@@ -21,7 +21,7 @@ class ScalacTestdataHighlightingTest_2_12 extends ScalacTestdataHighlightingTest
   override val reporter = ProgressReporter.newInstance(getClass.getSimpleName, filesWithProblems = Map.empty, reportStatus = false)
 
   override def filesToHighlight: Array[File] = {
-    val testDataPath = TestUtils.getTestDataPath + "/scalacTests/pos/"
+    val testDataPath = TestUtils.getTestDataPath + "/scalacTests/2.12/pos/"
 
     val dir = new File(testDataPath)
     dir.listFiles()
