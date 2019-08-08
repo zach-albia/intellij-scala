@@ -83,6 +83,9 @@ trait SeveralFilesHighlightingTest {
       addedFiles.foreach(AllProjectHighlightingTest.annotateScalaFile(_, reporter))
     } finally {
       addedFiles.foreach(removeFile)
+      // additionally remove all other children (like subdirectories) to prevent flaky tests
+      inWriteAction(LightPlatformTestCase.getSourceRoot.getChildren.foreach(_.delete(null)))
+
       getModule.scalaCompilerSettings.additionalCompilerOptions = Seq.empty
     }
   }
