@@ -1,20 +1,25 @@
 package org.jetbrains.plugins.scala.projectHighlighting
 
 import java.io.File
+import java.nio.file.{Path, Paths}
 
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import com.intellij.testFramework.LightPlatformTestCase
 import org.apache.commons.io.FilenameUtils
 import org.jetbrains.plugins.scala.ScalaFileType
 import org.jetbrains.plugins.scala.extensions.{inWriteAction, using}
-import org.jetbrains.plugins.scala.util.PsiFileTestUtil
-import org.jetbrains.plugins.scala.util.reporter.ProgressReporter
 import org.jetbrains.plugins.scala.project._
 import org.jetbrains.plugins.scala.project.settings.ScalaCompilerConfiguration
 import org.jetbrains.plugins.scala.projectHighlighting.AllProjectHighlightingTest.originalDirNameKey
+import org.jetbrains.plugins.scala.util.PsiFileTestUtil
+import org.jetbrains.plugins.scala.util.reporter.ProgressReporter
 
 import scala.io.Source
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Groups
 
 /**
   * Nikolay.Tropin
@@ -32,7 +37,7 @@ trait SeveralFilesHighlightingTest {
 
   def doTest(): Unit = {
     val allFiles = filesToHighlight
-      .filter(f => f.isDirectory || isScalaFile(f) || isFlagsFile(f))
+      .filter(f => f.isDirectory || isScalaFile(f) || isJavaFile(f) || isFlagsFile(f))
       .groupBy(f => FilenameUtils.removeExtension(f.getPath))
 
     var idx = 0
@@ -46,9 +51,20 @@ trait SeveralFilesHighlightingTest {
     reporter.reportResults()
   }
 
+  private val packagePattern: Regex = raw"package\s+(\S+)\s*;".r
+  private def adjustPathToPackage(path: Path, content: String): Path = packagePattern.findFirstMatchIn(content) match {
+    case Some(Groups(pkg)) =>
+      val parts = pkg.split('.') :+ path.toString
+      Paths.get(parts.reduce(FilenameUtils.concat))
+    case _ => path
+  }
+
   private def addFileToProject(file: File, relativeTo: File): PsiFile = {
     val text: String = content(file)
-    val path = relativeTo.toPath.relativize(file.toPath)
+    val relPath = relativeTo.toPath.relativize(file.toPath)
+    val path =
+      if (!isJavaFile(file)) relPath
+      else adjustPathToPackage(relPath, text)
     val originalDirName = relativeTo.getName
     val psiFile = PsiFileTestUtil.addFileToProject(path, text, getProject)
     psiFile.putUserData(originalDirNameKey, originalDirName)
@@ -91,6 +107,7 @@ trait SeveralFilesHighlightingTest {
   }
 
   private def isScalaFile(f: File) = f.getName.endsWith(ScalaFileType.INSTANCE.getDefaultExtension)
+  private def isJavaFile(f: File) = f.getName.endsWith(JavaFileType.INSTANCE.getDefaultExtension)
   private def isFlagsFile(f: File) = f.getName.endsWith("flags")
 
 }
