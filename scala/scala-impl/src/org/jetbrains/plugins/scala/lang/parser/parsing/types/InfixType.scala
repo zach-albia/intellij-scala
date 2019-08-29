@@ -6,7 +6,7 @@ package types
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.psi.tree.IElementType
-import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
+import org.jetbrains.plugins.scala.lang.lexer.{ScalaTokenType, ScalaTokenTypes}
 import org.jetbrains.plugins.scala.lang.parser.parsing.builder.ScalaPsiBuilder
 
 /**
@@ -29,6 +29,7 @@ trait InfixType {
   def parse(builder: ScalaPsiBuilder): Boolean = parse(builder, star = false)
   def parse(builder: ScalaPsiBuilder, star: Boolean): Boolean = parse(builder,star,isPattern = false)
   def parse(builder: ScalaPsiBuilder, star: Boolean, isPattern: Boolean): Boolean = {
+    implicit val b: ScalaPsiBuilder = builder
     var couldBeVarArg = false
 
     var infixTypeMarker = builder.mark
@@ -36,7 +37,7 @@ trait InfixType {
     var count = 0
     markerList = infixTypeMarker :: markerList
     builder.getTokenType match {
-      case ScalaTokenTypes.tUNDER => //wildcard is possible for infix types, like for parameterized. No bounds possible
+      case ScalaTokenTypes.tUNDER | ScalaTokenType.IsQuestion() => //wildcard is possible for infix types, like for parameterized. No bounds possible
         val typeMarker = builder.mark()
         builder.advanceLexer()
         typeMarker.done(ScalaElementType.WILDCARD_TYPE)
@@ -86,7 +87,7 @@ trait InfixType {
       }
 
       builder.getTokenType match {
-        case ScalaTokenTypes.tUNDER => //wildcard is possible for infix types, like for parameterized. No bounds possible
+        case ScalaTokenTypes.tUNDER | ScalaTokenType.IsQuestion() => //wildcard is possible for infix types, like for parameterized. No bounds possible
           val typeMarker = builder.mark()
           builder.advanceLexer()
           typeMarker.done(ScalaElementType.WILDCARD_TYPE)

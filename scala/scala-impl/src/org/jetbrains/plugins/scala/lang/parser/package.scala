@@ -29,6 +29,7 @@ package object parser {
       result
     }
 
+    // TODO: remove this helper method, platform PsiBuilderImpl already does this check
     def checkedAdvanceLexer(): Unit = if (!repr.eof) {
       repr.advanceLexer()
     }

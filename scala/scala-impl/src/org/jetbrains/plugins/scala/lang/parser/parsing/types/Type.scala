@@ -8,18 +8,13 @@ import org.jetbrains.plugins.scala.lang.lexer.{ScalaTokenType, ScalaTokenTypes}
 import org.jetbrains.plugins.scala.lang.parser.parsing.builder.ScalaPsiBuilder
 import org.jetbrains.plugins.scala.lang.parser.parsing.params.TypeParamClause
 
-/**
- * @author Alexander Podkhalyuzin
- *         Date: 28.02.2008
- */
-
 /*
  * Type ::= {'given'} InfixType '=>' Type
  *        | '(' ['=>' Type] ')' => Type
  *        | TypeParamClause '=>>' Type      (Scala 3+ only)
  *        | MatchType                       (Scala 3+ Only)
  *        | InfixType [ExistentialClause]
- *        | _ [>: Type] [<: Type]
+ *        | [_ | ?] [>: Type] [<: Type]
  */
 object Type extends Type {
   override protected def infixType = InfixType
@@ -53,7 +48,7 @@ trait Type extends ParsingRule {
       true
     } else {
       builder.getTokenType match {
-        case ScalaTokenTypes.tUNDER =>
+        case ScalaTokenTypes.tUNDER | ScalaTokenType.IsQuestion() =>
           builder.advanceLexer()
           builder.getTokenText match {
             case ">:" =>

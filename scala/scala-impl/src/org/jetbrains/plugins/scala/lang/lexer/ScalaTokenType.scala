@@ -24,6 +24,8 @@ object ScalaTokenType {
 
   val TypeLambdaArrow = new ScalaTokenType("=>>")
 
+  val Question = new ScalaTokenType("?")
+
   /* soft keywords */
   val Derives = new ScalaTokenType("derives")
   val As      = new ScalaTokenType("as")
@@ -55,6 +57,13 @@ object ScalaTokenType {
     def unapply(elementType: IElementType)
                (implicit builder: ScalaPsiBuilder): Boolean =
       isIdentifier(elementType, Derives)
+  }
+
+  object IsQuestion {
+
+    def unapply(elementType: IElementType)
+               (implicit builder: ScalaPsiBuilder): Boolean =
+      isIdentifier(elementType, Question)
   }
 
   private[this] def isIdentifier(elementType: IElementType,
