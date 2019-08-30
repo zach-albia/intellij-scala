@@ -12,5 +12,5 @@ final class ScFileViewProviderFactory extends FileViewProviderFactory {
                                       language: Language,
                                       manager: PsiManager,
                                       eventSystemEnabled: Boolean) =
-    new ScFileViewProvider(file, eventSystemEnabled)(manager)
+    new ScFileViewProvider(file, eventSystemEnabled)(manager, language)
 }

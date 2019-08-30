@@ -20,13 +20,14 @@ final class ScClassFileDecompiler extends compiled.ClassFileDecompilers.Full {
   override def createFileViewProvider(file: VirtualFile,
                                       manager: PsiManager,
                                       eventSystemEnabled: Boolean): SingleRootFileViewProvider =
-    ScClassFileDecompiler.createFileViewProvider(file, eventSystemEnabled)(manager)
+    ScClassFileDecompiler.createFileViewProvider(file, eventSystemEnabled)(manager, ScalaLanguage.INSTANCE)
 }
 
 object ScClassFileDecompiler {
 
   def createFileViewProvider(file: VirtualFile, eventSystemEnabled: Boolean)
-                            (implicit manager: PsiManager): ScFileViewProvider =
+                            (implicit manager: PsiManager,
+                             language: Language): ScFileViewProvider =
     DecompilationResult.tryDecompile(file) match {
       case Some(decompilationResult) =>
         new ScClsFileViewProvider(file, decompilationResult, eventSystemEnabled)
@@ -67,7 +68,8 @@ object ScClassFileDecompiler {
   }
 
   private final class NonScalaClassFileViewProvider(file: VirtualFile, eventSystemEnabled: Boolean)
-                                                   (implicit manager: PsiManager)
+                                                   (implicit manager: PsiManager,
+                                                    language: Language)
     extends ScFileViewProvider(file, eventSystemEnabled) {
 
     override def createFile(language: Language): Null = null

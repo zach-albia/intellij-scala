@@ -5,19 +5,20 @@ package parser
 import com.intellij.lang.{ASTNode, PsiBuilder, PsiParser}
 import com.intellij.psi.tree.IElementType
 
-final class ScalaParser extends PsiParser {
+final class ScalaParser(isScala3: Boolean = false) extends PsiParser {
 
   import parsing._
+  import builder.ScalaPsiBuilderImpl
 
   override def parse(root: IElementType, delegate: PsiBuilder): ASTNode = {
-    val builderImpl = new builder.ScalaPsiBuilderImpl(delegate)
+    val builder = new ScalaPsiBuilderImpl(delegate, isScala3)
 
     root match {
       case ScCodeBlockElementType.BlockExpression =>
-        expressions.BlockExpr.parse(builderImpl)
+        expressions.BlockExpr.parse(builder)
       case _ =>
-        val rootMarker = delegate.mark
-        Program.parse(builderImpl)
+        val rootMarker = delegate.mark()
+        Program.parse(builder)
         rootMarker.done(root)
     }
 

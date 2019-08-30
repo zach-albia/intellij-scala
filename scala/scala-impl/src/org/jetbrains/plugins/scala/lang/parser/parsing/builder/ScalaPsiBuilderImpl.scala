@@ -13,7 +13,8 @@ import org.jetbrains.plugins.scala.settings.ScalaFeatureSettings
 /**
   * @author Alexander Podkhalyuzin
   */
-class ScalaPsiBuilderImpl(delegate: PsiBuilder)
+class ScalaPsiBuilderImpl(delegate: PsiBuilder,
+                          override val isScala3: Boolean = false)
   extends impl.PsiBuilderAdapter(delegate)
     with ScalaPsiBuilder {
 
@@ -43,9 +44,6 @@ class ScalaPsiBuilderImpl(delegate: PsiBuilder)
     import meta.intellij.psi._
     _.isMetaEnabled
   }
-
-  override lazy val isScala3: Boolean =
-    isInScala3(containingFile)
 
   override def newlineBeforeCurrentToken: Boolean =
     findPreviousNewLineSafe.isDefined

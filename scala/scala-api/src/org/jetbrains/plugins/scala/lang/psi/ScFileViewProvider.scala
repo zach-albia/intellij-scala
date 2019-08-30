@@ -10,8 +10,9 @@ import com.intellij.psi.{PsiManager, SingleRootFileViewProvider}
 import org.jetbrains.plugins.scala.lang.psi.api.ScFile
 
 class ScFileViewProvider(file: VirtualFile, eventSystemEnabled: Boolean)
-                        (implicit manager: PsiManager)
-  extends SingleRootFileViewProvider(manager, file, eventSystemEnabled, ScalaLanguage.INSTANCE) {
+                        (implicit manager: PsiManager,
+                         language: Language)
+  extends SingleRootFileViewProvider(manager, file, eventSystemEnabled, language) {
 
   override final def createFile(project: Project,
                                 file: VirtualFile,
