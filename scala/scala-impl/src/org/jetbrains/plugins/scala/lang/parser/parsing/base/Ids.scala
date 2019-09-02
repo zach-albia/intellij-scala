@@ -22,7 +22,7 @@ object Ids extends ParsingRule {
 
     if (Id()) {
       var stop = false
-      while (stop && builder.getTokenType == tCOMMA) {
+      while (!stop && builder.getTokenType == tCOMMA) {
         builder.advanceLexer() //Ate ,
 
         if (!Id()) {
