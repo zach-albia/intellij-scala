@@ -10,8 +10,11 @@ import scala.collection.mutable
 
 class DepthFirstIterator(element: PsiElement, predicate: PsiElement => Boolean) extends Iterator[PsiElement] {
   private var stack: List[PsiElement] =
-    if (element == null)  List.empty
-    else                  List(element)
+    if (element == null || !predicate(element)) {
+      List.empty
+    } else {
+      List(element)
+    }
 
   def hasNext: Boolean = stack.nonEmpty
 
