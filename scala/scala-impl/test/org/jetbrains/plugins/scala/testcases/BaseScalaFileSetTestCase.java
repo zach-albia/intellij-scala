@@ -41,6 +41,8 @@ public abstract class BaseScalaFileSetTestCase extends ScalaFileSetTestCase {
   public abstract String transform(String testName, String[] data) throws Exception;
   
   private static final String BEFORE_AND_AFTER_SEPARATOR = "-----";
+  private static final String LANGUAGE_LEVEL_PREFIX = "languageLevel=";
+  private static final String LANGUAGE_LEVEL_SEPARATOR = "-----";
   private static final String UNCHANGED_TAG = "<unchanged>";
 
   public void runTest(final File myTestFile) throws Throwable {
@@ -51,6 +53,10 @@ public abstract class BaseScalaFileSetTestCase extends ScalaFileSetTestCase {
 
     int separatorIndex;
     content = StringUtil.replace(content, "\r", ""); // for MACs
+
+    if (content.startsWith(LANGUAGE_LEVEL_PREFIX)) {
+
+    }
 
     // Adding input  before -----
     while ((separatorIndex = content.indexOf(BEFORE_AND_AFTER_SEPARATOR)) >= 0) {
