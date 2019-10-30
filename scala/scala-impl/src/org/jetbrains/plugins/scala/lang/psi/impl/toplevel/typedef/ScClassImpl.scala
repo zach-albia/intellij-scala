@@ -24,10 +24,12 @@ import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef._
 import org.jetbrains.plugins.scala.lang.psi.light.ScLightField
 import org.jetbrains.plugins.scala.lang.psi.stubs.ScTemplateDefinitionStub
 import org.jetbrains.plugins.scala.lang.psi.stubs.elements.ScTemplateDefinitionElementType
-import org.jetbrains.plugins.scala.lang.psi.types.ScTypeExt
+import org.jetbrains.plugins.scala.lang.psi.types.ScalaType
 import org.jetbrains.plugins.scala.lang.psi.types.api.TypeParameterType
+import org.jetbrains.plugins.scala.lang.psi.types.api.designator.ScThisType
 import org.jetbrains.plugins.scala.lang.resolve.processor.BaseProcessor
 import org.jetbrains.plugins.scala.macroAnnotations.CachedInUserData
+import org.jetbrains.plugins.scala.lang.resolve.ScalaResolveState.ResolveStateExt
 
 /**
   * @author Alexander.Podkhalyuzin
@@ -58,10 +60,12 @@ class ScClassImpl(stub: ScTemplateDefinitionStub[ScClass],
   import com.intellij.psi.scope.PsiScopeProcessor
   import com.intellij.psi.{PsiElement, ResolveState}
 
-  override def processDeclarationsForTemplateBody(processor: PsiScopeProcessor,
-                                                  state: ResolveState,
-                                                  lastParent: PsiElement,
-                                                  place: PsiElement): Boolean = {
+  override def processDeclarationsForTemplateBody(
+    processor:  PsiScopeProcessor,
+    state:      ResolveState,
+    lastParent: PsiElement,
+    place:      PsiElement
+  ): Boolean = {
     if (DumbService.getInstance(getProject).isDumb) return true
 
     desugaredElement match {
@@ -79,7 +83,11 @@ class ScClassImpl(stub: ScTemplateDefinitionStub[ScClass],
           ProgressManager.checkCanceled()
           if (processor.isInstanceOf[BaseProcessor]) {
             // don't expose class parameters to Java.
-            if (!processor.execute(p, state)) return false
+            val fromType =
+              if (ScalaPsiUtil.isPlaceTdAncestor(this, place)) ScThisType(this)
+              else                                             ScalaType.designator(this)
+
+            if (!processor.execute(p, state.withFromType(fromType))) return false
           }
         }
     }
@@ -155,7 +163,6 @@ class ScClassImpl(stub: ScTemplateDefinitionStub[ScClass],
       case Some(constr) => constr.parameters.map { param =>
         param.`type`() match {
           case Right(tp: TypeParameterType) if tp.psiTypeParameter.findAnnotation("scala.specialized") != null =>
-            val psiTypeText: String = tp.toPsiType.getCanonicalText
             val lightField = ScLightField(param.getName, tp, this, PsiModifier.PUBLIC, PsiModifier.FINAL)
             Option(lightField)
           case _ => None
@@ -167,8 +174,5 @@ class ScClassImpl(stub: ScTemplateDefinitionStub[ScClass],
   }
 
   override def getTypeParameterList: PsiTypeParameterList = typeParametersClause.orNull
-
-  override def getInterfaces: Array[PsiClass] = {
-    getSupers.filter(_.isInterface)
-  }
+  override def getInterfaces: Array[PsiClass]             = getSupers.filter(_.isInterface)
 }

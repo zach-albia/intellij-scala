@@ -42,14 +42,23 @@ final class ImplicitConversionProcessor(override val getPlace: PsiElement,
     val elemType = subst(namedElement.`type`().getOrAny)
 
     if (functionType.exists(elemType.conforms(_))) {
-      addResult(new ScalaResolveResult(namedElement, subst, state.importsUsed, fromType = state.fromType))
+      addResult(
+        new ScalaResolveResult(namedElement, subst, state.importsUsed, fromType = state.fromType)
+      )
     }
   }
 
   private def addIfImplicitConversion(function: ScFunction)
                                      (implicit state: ResolveState): Unit = {
     if (function.isImplicitConversion) {
-      addResult(new ScalaResolveResult(function, state.substitutorWithThisType, state.importsUsed, fromType = state.fromType))
+      addResult(
+        new ScalaResolveResult(
+          function,
+          state.substitutorWithThisType,
+          state.importsUsed,
+          fromType = state.fromType
+        )
+      )
     }
   }
 }

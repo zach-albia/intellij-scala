@@ -231,9 +231,15 @@ class ImplicitCollector(place: PsiElement,
                                   (implicit state: ResolveState): Boolean = {
 
       if (isImplicit(namedElement) && isAccessible(namedElement, getPlace)) {
-        addResult(new ScalaResolveResult(namedElement, state.substitutorWithThisType,
-          importsUsed =  state.importsUsed,
-          implicitSearchState = Some(collectorState)))
+        addResult(
+          new ScalaResolveResult(
+            namedElement,
+            state.substitutorWithThisType,
+            importsUsed         = state.importsUsed,
+            fromType            = state.fromType,
+            implicitSearchState = Some(collectorState)
+          )
+        )
       }
 
       true

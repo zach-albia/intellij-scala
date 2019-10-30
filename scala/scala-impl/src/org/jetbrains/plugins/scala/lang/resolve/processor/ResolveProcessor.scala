@@ -43,7 +43,7 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
   }
 
   @volatile
-  private var resolveScope: GlobalSearchScope = null
+  private var resolveScope: GlobalSearchScope = _
 
   private val history = new ArrayBuffer[HistoryEvent]
   private var fromHistory: Boolean = false
@@ -59,9 +59,9 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
 
   def getPlace: PsiElement = ref
 
-  val isThisOrSuperResolve = ref.getParent match {
+  private[this] val isThisOrSuperResolve = ref.getParent match {
     case _: ScThisReference | _: ScSuperReference => true
-    case _ => false
+    case _                                        => false
   }
 
   def emptyResultSet: Boolean = candidatesSet.isEmpty || levelSet.isEmpty
@@ -198,9 +198,11 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
   override def candidatesS: Set[ScalaResolveResult] = {
     var res = candidatesSet
     val iterator = levelSet.iterator()
+
     while (iterator.hasNext) {
       res += iterator.next()
     }
+
     if (!ResolveProcessor.compare(ignoredSet, res)) {
       res = Set.empty
       clear()
@@ -251,15 +253,14 @@ object ResolveProcessor {
 
   private case class AddResult(results: Seq[ScalaResolveResult]) extends HistoryEvent
 
-  private def compare(ignoredSet: Set[ScalaResolveResult], set: Set[ScalaResolveResult]): Boolean = {
-    if (ignoredSet.nonEmpty && set.isEmpty) return false
-
-    ignoredSet.forall { ignored =>
-      set.forall { result =>
-        areEquivalent(ignored.getActualElement, result.getActualElement)
+  private def compare(ignoredSet: Set[ScalaResolveResult], set: Set[ScalaResolveResult]): Boolean =
+    if (ignoredSet.nonEmpty && set.isEmpty) false
+    else
+      ignoredSet.forall { ignored =>
+        set.forall { result =>
+          areEquivalent(ignored.getActualElement, result.getActualElement)
+        }
       }
-    }
-  }
 
   private[this] def areEquivalent(left: PsiNamedElement, right: PsiNamedElement): Boolean =
     ScEquivalenceUtil.smartEquivalence(left, right) ||

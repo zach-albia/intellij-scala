@@ -30,7 +30,7 @@ import org.jetbrains.plugins.scala.project.ProjectContext
 import scala.collection.Set
 
 object BaseProcessor {
-  def unapply(p: BaseProcessor) = Some(p.kinds)
+  def unapply(p: BaseProcessor): Some[Set[ResolveTargets.Value]] = Some(p.kinds)
 
   def isImplicitProcessor(processor: PsiScopeProcessor): Boolean = {
     processor match {
@@ -65,7 +65,8 @@ abstract class BaseProcessor(val kinds: Set[ResolveTargets.Value])
   def changedLevel: Boolean = true
 
   protected var accessibility = true
-  def doNotCheckAccessibility() {accessibility = false}
+
+  def doNotCheckAccessibility(): Unit = accessibility = false
 
   override final def execute(element: PsiElement, state: ResolveState): Boolean = element match {
     case namedElement: PsiNamedElement if ResolveUtils.kindMatches(namedElement, kinds) => execute(namedElement)(state)
@@ -195,7 +196,7 @@ abstract class BaseProcessor(val kinds: Set[ResolveTargets.Value])
         if (!break) return false
         processEnum(e, execute(_, state))
       case ScDesignatorType(o: ScObject) =>
-        processElement(o, ScSubstitutor.empty, place, state)
+        processElement(o, ScSubstitutor.empty, place, state.withFromType(t))
       case ScDesignatorType(e: ScTypedDefinition) if place.isInstanceOf[ScTypeProjection] =>
         val result: TypeResult =
           e match {
