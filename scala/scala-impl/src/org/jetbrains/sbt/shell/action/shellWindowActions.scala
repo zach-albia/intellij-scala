@@ -124,7 +124,10 @@ class EOFAction(project: Project) extends DumbAwareAction {
 
 class SigIntAction(project: Project) extends DumbAwareAction {
 
-  setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK)))
+  private val templatePresentation: Presentation = getTemplatePresentation
+  templatePresentation.setText("Interrupt task")
+  templatePresentation.setIcon(AllIcons.Debugger.KillProcess)
+  setShortcutSet(new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK)))
 
   override def actionPerformed(e: AnActionEvent): Unit = {
     SbtShellCommunication.forProject(project).sendSigInt()

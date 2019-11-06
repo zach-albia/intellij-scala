@@ -55,7 +55,7 @@ final class SbtShellConsoleView private(project: Project, debugConnection: Optio
       act.registerCustomShortcutSet(act.getShortcutSet, this)
     }
 
-    group.addAll(startAction, stopAction, debugShellAction)
+    group.addAll(startAction, stopAction, debugShellAction, sigIntAction)
     group.addSeparator()
     group.addAll(scrollToTheEndToolbarAction, toggleSoftWrapsAction, clearAllAction)
     group

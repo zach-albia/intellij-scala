@@ -88,7 +88,7 @@ final class SbtProcessManager(project: Project) extends ProjectComponent {
   }
 
   @TraceWithLogger
-  private def createShellProcessHandler(): (ColoredProcessHandler, Option[RemoteConnection]) = {
+  private def createShellProcessHandler(): (KillableProcessHandler, Option[RemoteConnection]) = {
     val workingDirPath =
       Option(ProjectUtil.guessProjectDir(project))
         .getOrElse(throw new IllegalStateException(s"no project directory found for project ${project.getName}"))
@@ -182,7 +182,7 @@ final class SbtProcessManager(project: Project) extends ProjectComponent {
       notifyVersionUpgrade(projectSbtVersion.presentation, upgradedSbtVersion, workingDir)
 
     val pty = createPtyCommandLine(commandLine)
-    val cpty = new ColoredProcessHandler(pty)
+    val cpty = new KillableProcessHandler(pty)
     cpty.setShouldKillProcessSoftly(true)
     patchWindowSize(cpty.getProcess)
 
@@ -424,7 +424,9 @@ final class SbtProcessManager(project: Project) extends ProjectComponent {
     }
   }
 
-  def sendSigInt(): Unit = processData.foreach(_.processHandler.destroyProcess())
+  def sendSigInt(): Unit = processData.synchronized {
+    processData.foreach(_.processHandler.sendSigInt())
+  }
 
   override def projectClosed(): Unit = {
     destroyProcess()
@@ -441,6 +443,20 @@ final class SbtProcessManager(project: Project) extends ProjectComponent {
   }
 }
 
+/**
+  * Just sends sig int without marking the process as terminating.
+  * Needed to handle the `cancelable in Global := true` in SBT.
+  * In that case we just need to send SIGINT to the process and
+  * expect to stop the current task, not the entire sbt process.
+  */
+class KillableProcessHandler(process: GeneralCommandLine) extends
+  ColoredProcessHandler(process) {
+
+  def sendSigInt(): Unit ={
+    destroyProcessImpl()
+  }
+}
+
 object SbtProcessManager {
 
   def forProject(project: Project): SbtProcessManager = {
@@ -449,7 +465,7 @@ object SbtProcessManager {
     else pm
   }
 
-  private case class ProcessData(processHandler: ColoredProcessHandler,
+  private case class ProcessData(processHandler: KillableProcessHandler,
                                  runner: SbtShellRunner)
 
   /** Since version 1.2.0 sbt supports injecting additional plugins to the sbt shell with a command.
