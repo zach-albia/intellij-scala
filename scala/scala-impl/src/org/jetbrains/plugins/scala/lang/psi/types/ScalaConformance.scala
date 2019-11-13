@@ -501,7 +501,7 @@ trait ScalaConformance extends api.Conformance with TypeVariableUnification {
       }
     }
 
-    private var result: ConstraintsResult = null
+    private var result: ConstraintsResult = _
     private var constraints: ConstraintSystem = ConstraintSystem.empty
 
     def getResult: ConstraintsResult = result
@@ -883,26 +883,6 @@ trait ScalaConformance extends api.Conformance with TypeVariableUnification {
           case _ =>
             result = ConstraintsResult.Left
         }
-      }
-
-      //todo: looks like this code can be simplified and unified.
-      //todo: what if left is type alias declaration, right is type alias definition, which is alias to that declaration?
-      p.isAliasType match {
-        case Some(AliasType(ta, lower, _)) =>
-          if (ta.isInstanceOf[ScTypeAliasDeclaration])
-            r match {
-              case ParameterizedType(proj, args2) if r.isAliasType.isDefined && (proj equiv p.designator) =>
-                processEquivalentDesignators(args2)
-                return
-              case _ =>
-            }
-
-          result = lower match {
-            case Right(value) => conformsInner(value, r, visited, constraints)
-            case _ => ConstraintsResult.Left
-          }
-          return
-        case _ =>
       }
 
       r match {
