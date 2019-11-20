@@ -4,8 +4,6 @@ import java.io.InputStream
 import java.net.URL
 import java.util
 
-import sun.misc.CompoundEnumeration
-
 /**
  * Hides classes that satisfy `filter` from parent class-loader.
  * Force some classes to be resolved in current classloader, instead of searching in parent.
@@ -32,7 +30,7 @@ final class IsolatingClassLoader(parent: ClassLoader, filter: String => Boolean)
     apply(name)(super.getResourceAsStream(name)).orNull
 
   override def getResources(name: String): util.Enumeration[URL] =
-    apply(name)(super.getResources(name)).getOrElse(new CompoundEnumeration[URL](Array()))
+    apply(name)(super.getResources(name)).getOrElse(util.Collections.emptyEnumeration())
 
 
   @inline
