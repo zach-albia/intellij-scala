@@ -134,7 +134,7 @@ trait FileDeclarationsHolder extends ScDeclarationSequenceHolder with ScImportsH
 
     iterator.foreach { syntheticSym =>
       ProgressManager.checkCanceled()
-      if (!namesSet.contains(syntheticSym.getName) && processor.execute(syntheticSym, state))
+      if (!namesSet.contains(syntheticSym.getName) && !processor.execute(syntheticSym, state))
         return false
     }
 
@@ -157,11 +157,11 @@ trait FileDeclarationsHolder extends ScDeclarationSequenceHolder with ScImportsH
       /* scala package requires special treatment to process synthetic classes/objects */
       if (fqn == "scala") processScalaPackage(processor, state, psiManager, scope)
 
-      val maybeObject = psiManager.getCachedClass(scope, fqn)
+      val classes = psiManager.getCachedClasses(scope, fqn)
 
       updateProcessor(processor, precedence) {
-        maybeObject.collect { case obj: ScObject =>
-          if (!isScalaPredefinedClass) {
+        classes.collect { case obj: ScObject =>
+          if (!shouldNotProcessDefaultImport(fqn)) {
             val newState = state.withFromType(obj.`type`().toOption)
             if (!obj.processDeclarations(processor, newState, null, place)) return false
           }
@@ -178,7 +178,7 @@ trait FileDeclarationsHolder extends ScDeclarationSequenceHolder with ScImportsH
     true
   }
 
-  protected def isScalaPredefinedClass: Boolean
+  protected def shouldNotProcessDefaultImport(fqn: String): Boolean
 }
 
 //noinspection TypeAnnotation
