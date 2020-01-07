@@ -1,9 +1,9 @@
 package org.jetbrains.plugins.scala.lang.psi.controlFlow.cfg
 
 import com.intellij.psi.{PsiElement, PsiMethod, PsiNamedElement}
-import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.dfa.{DfEntity, DfVariable}
-import org.jetbrains.plugins.scala.lang.psi.api.base.{AuxiliaryConstructor, Constructor}
+import org.jetbrains.plugins.scala.extensions._
+import org.jetbrains.plugins.scala.lang.psi.api.base.Constructor
 import org.jetbrains.plugins.scala.lang.psi.controlFlow.AbstractInstructionVisitor
 import org.jetbrains.plugins.scala.lang.psi.controlFlow.cfg.Call._
 
@@ -44,7 +44,7 @@ class Call private[controlFlow](val thisRef: Option[DfEntity],
     builder.toString()
   }
 
-  override def info: Instruction.Info = Jump
+  override def info: Instruction.Info = Call
   override def accept(visitor: AbstractInstructionVisitor): Unit = visitor.visitCall(this)
 }
 

@@ -10,7 +10,7 @@ class Mov private[controlFlow](val target: DfVariable, val source: DfEntity) ext
 
   override def asmString: String = Instruction.asmAssignmentPrefix(target) + source
 
-  override def info: Instruction.Info = Read
+  override def info: Instruction.Info = Mov
   override def accept(visitor: AbstractInstructionVisitor): Unit = visitor.visitMov(this)
 }
 

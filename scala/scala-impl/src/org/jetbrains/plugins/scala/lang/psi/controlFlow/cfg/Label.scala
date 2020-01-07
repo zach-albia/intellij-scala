@@ -1,8 +1,8 @@
-package org.jetbrains.plugins.scala.lang.psi.controlFlow.cfg
-
-import org.jetbrains.plugins.scala.lang.psi.controlFlow
-import org.jetbrains.plugins.scala.lang.psi.controlFlow.ControlFlowGraph
-import org.jetbrains.plugins.scala.lang.psi.controlFlow.cfg
+package org.jetbrains.plugins.scala
+package lang
+package psi
+package controlFlow
+package cfg
 
 abstract class Label {
   def name: String

@@ -1,9 +1,11 @@
-package org.jetbrains.plugins.scala.lang.psi.controlFlow.cfg
+package org.jetbrains.plugins.scala
+package lang
+package psi
+package controlFlow
+package cfg
 
 import org.jetbrains.plugins.scala.dfa.{DfEntity, DfVariable}
-import org.jetbrains.plugins.scala.lang.psi.controlFlow.AbstractInstructionVisitor
 import org.jetbrains.plugins.scala.lang.psi.types.ScType
-import org.jetbrains.plugins.scala.extensions._
 
 class New private[controlFlow](val classType: ScType, ret: DfVariable) extends Instruction {
   override def sourceEntities: Seq[DfEntity] = Seq.empty
