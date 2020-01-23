@@ -6,7 +6,7 @@ import com.intellij.codeInsight.completion.ml.{CompletionEnvironment, ContextFea
 import com.intellij.codeInsight.completion.{CodeCompletionHandlerBase, CompletionType}
 import org.jetbrains.plugins.scala.ScalaLanguage
 import org.jetbrains.plugins.scala.base.ScalaLightCodeInsightFixtureTestAdapter
-import org.junit.{Assert, Test}
+import org.junit.Test
 
 class ScalaContextFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAdapter {
 
@@ -293,7 +293,7 @@ class ScalaContextFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
 
   private def assertFeature(name: String, expected: MLFeatureValue)(fileText: String): Unit = {
     val features = computeFeatures(fileText)
-    assertFeatureEquals(expected, features.get(name))
+    AssertFeatureValues.equals(expected, features.get(name))
   }
 
   private def computeFeatures(fileText: String): util.Map[String, MLFeatureValue] = {
@@ -329,23 +329,6 @@ class ScalaContextFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     }
     finally {
       ContextFeatureProvider.EP_NAME.removeExplicitExtension(ScalaLanguage.INSTANCE, provider)
-    }
-  }
-
-  private def assertFeatureEquals(expected: MLFeatureValue, actual: MLFeatureValue): Unit = {
-
-    // no equals impl for MLFeatureValue
-    def adapter(value: MLFeatureValue): Any = {
-      val actualValue = Option(value.asBinary()) orElse Option(value.asCategorical()) orElse Option(value.asFloat())
-      actualValue.get
-    }
-
-    val adaptedExpected = adapter(expected)
-    val adaptedActual = adapter(actual)
-
-    adaptedExpected match {
-      case floatExpected: Double => Assert.assertEquals(floatExpected, adaptedActual.asInstanceOf[Double], 0.001)
-      case _ => Assert.assertEquals(adaptedExpected, adaptedActual)
     }
   }
 }

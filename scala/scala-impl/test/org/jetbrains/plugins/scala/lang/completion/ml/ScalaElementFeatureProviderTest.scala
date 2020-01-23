@@ -9,7 +9,7 @@ import com.intellij.psi.PsiNamedElement
 import org.jetbrains.plugins.scala.ScalaLanguage
 import org.jetbrains.plugins.scala.base.ScalaLightCodeInsightFixtureTestAdapter
 import org.jetbrains.plugins.scala.extensions._
-import org.junit.{Assert, Test}
+import org.junit.Test
 
 import scala.collection.mutable
 
@@ -642,12 +642,12 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
 
   private def assertContext(name: String, expected: MLFeatureValue)(fileText : String): Unit = {
     val elementsFeatures = computeElementsFeatures(fileText)
-    assertFeatureEquals(expected, elementsFeatures.head._2.get(name))
+    AssertFeatureValues.equals(expected, elementsFeatures.head._2.get(name))
   }
 
   private def assertElement(name: String, element: String, expected: MLFeatureValue)(fileText : String): Unit = {
     val elementFeatures = computeElementsFeatures(fileText)
-    assertFeatureEquals(expected, elementFeatures(element).get(name))
+    AssertFeatureValues.equals(expected, elementFeatures(element).get(name))
   }
 
   private def computeElementsFeatures(fileText: String): Map[String, util.Map[String, MLFeatureValue]] = {
@@ -688,20 +688,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     }
     finally {
       ElementFeatureProvider.EP_NAME.removeExplicitExtension(ScalaLanguage.INSTANCE, provider)
-    }
-  }
-
-  private def assertFeatureEquals(expected: MLFeatureValue, actual: MLFeatureValue): Unit = {
-
-    // no equals impl for MLFeatureValue
-    def adapter(value: MLFeatureValue): Any = value.getValue
-
-    val adaptedExpected = adapter(expected)
-    val adaptedActual = adapter(actual)
-
-    adaptedExpected match {
-      case floatExpected: Double => Assert.assertEquals(floatExpected, adaptedActual.asInstanceOf[Double], 0.001)
-      case _ => Assert.assertEquals(adaptedExpected, adaptedActual)
     }
   }
 }
