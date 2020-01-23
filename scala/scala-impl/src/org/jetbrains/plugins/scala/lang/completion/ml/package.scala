@@ -1,16 +1,20 @@
 package org.jetbrains.plugins.scala.lang.completion
 
-import com.intellij.psi.impl.compiled.ClsMethodImpl
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.lang.ASTNode
 import com.intellij.psi._
+import com.intellij.psi.impl.compiled.ClsMethodImpl
+import com.intellij.psi.tree.IElementType
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.text.NameUtilCore
 import org.jetbrains.plugins.scala.extensions._
-import org.jetbrains.plugins.scala.lang.psi.api.ScPackage
+import org.jetbrains.plugins.scala.lang.lexer.{ScalaTokenType, ScalaTokenTypes}
+import org.jetbrains.plugins.scala.lang.psi.api.{ScFile, ScPackage}
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScFieldId
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.{ScBindingPattern, ScReferencePattern}
-import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScAssignment, ScCatchBlock, ScPostfixExpr, ScReferenceExpression}
-import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScParameter
+import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScArgumentExprList, ScAssignment, ScBlock, ScCatchBlock, ScFor, ScIf, ScInfixExpr, ScPostfixExpr, ScReferenceExpression, ScTry}
+import org.jetbrains.plugins.scala.lang.psi.api.statements.params.{ScParameter, ScParameterClause}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScFunction, ScFunctionDefinition, ScPatternDefinition, ScTypeAlias, ScTypeAliasDefinition, ScTypedDeclaration, ScVariableDefinition}
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.{ScTemplateBody, ScTemplateParents}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait}
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.synthetic.ScSyntheticFunction
 import org.jetbrains.plugins.scala.lang.psi.types.api.designator.{ScDesignatorType, ScProjectionType, ScThisType}
@@ -26,6 +30,51 @@ package object ml {
 
   private val NonNamePattern = """[^a-zA-Z_]""".r
   private val MaxWords = 7
+
+  private val KeywordsByElementType: Map[IElementType, Keyword] = {
+    import Keyword._
+    Map(
+      ScalaTokenTypes.kABSTRACT -> ABSRACT,
+      ScalaTokenTypes.kCASE -> CASE,
+      ScalaTokenTypes.kCATCH -> CATCH,
+      ScalaTokenType.ClassKeyword -> CLASS,
+      ScalaTokenTypes.kDEF -> DEF,
+      ScalaTokenTypes.kDO -> DO,
+      ScalaTokenTypes.kELSE -> ELSE,
+      ScalaTokenTypes.kEXTENDS -> EXTENDS,
+      ScalaTokenTypes.kFALSE -> UNKNOWN,
+      ScalaTokenTypes.kFINAL -> FINAL,
+      ScalaTokenTypes.kFINALLY -> FINALLY,
+      ScalaTokenTypes.kFOR_SOME -> UNKNOWN,
+      ScalaTokenTypes.kFOR -> FOR,
+      ScalaTokenTypes.kIF -> IF,
+      ScalaTokenTypes.kIMPLICIT -> IMPLICIT,
+      ScalaTokenTypes.kIMPORT -> IMPORT,
+      ScalaTokenTypes.kLAZY -> LAZY,
+      ScalaTokenTypes.kMATCH -> MATCH,
+      ScalaTokenTypes.kNULL -> NULL,
+      ScalaTokenType.NewKeyword -> NEW,
+      ScalaTokenType.ObjectKeyword -> OBJECT,
+      ScalaTokenTypes.kOVERRIDE -> OVERRIDE,
+      ScalaTokenTypes.kPACKAGE -> PACKAGE,
+      ScalaTokenTypes.kPRIVATE -> PRIVATE,
+      ScalaTokenTypes.kPROTECTED -> PROTECTED,
+      ScalaTokenTypes.kRETURN -> RETURN,
+      ScalaTokenTypes.kSEALED -> SEALED,
+      ScalaTokenTypes.kSUPER -> UNKNOWN,
+      ScalaTokenTypes.kTHIS -> UNKNOWN,
+      ScalaTokenTypes.kTHROW -> THROW,
+      ScalaTokenType.TraitKeyword -> TRAIT,
+      ScalaTokenTypes.kTRUE -> UNKNOWN,
+      ScalaTokenTypes.kTRY -> TRY,
+      ScalaTokenTypes.kTYPE -> TYPE,
+      ScalaTokenTypes.kVAL -> VAL,
+      ScalaTokenTypes.kVAR -> VAR,
+      ScalaTokenTypes.kWHILE -> WHILE,
+      ScalaTokenTypes.kWITH -> WITH,
+      ScalaTokenTypes.kYIELD -> YIELD,
+    )
+  }
 
   private[ml] def isSymbolic(name: String): Boolean = name.exists(c => !c.isLetterOrDigit && c != '$')
 
@@ -136,6 +185,59 @@ package object ml {
     }
   }
 
+  private[ml] def location(maybeElement: Option[PsiElement]): Location = {
+    import Location._
+
+    maybeElement
+      .flatMap { element =>
+        element.getParent match {
+          case reference: ScReferenceExpression if reference.isQualified => Some(REFERENCE)
+          case _ =>
+            Option(
+              PsiTreeUtil.getParentOfType(element, Array(
+                classOf[ScArgumentExprList],
+                classOf[ScAssignment],
+                classOf[ScBlock],
+                classOf[ScFile],
+                classOf[ScFunctionDefinition],
+                classOf[ScFor],
+                classOf[ScIf],
+                classOf[ScInfixExpr],
+                classOf[ScPatternDefinition],
+                classOf[ScParameterClause],
+                classOf[ScPostfixExpr],
+                classOf[ScTemplateBody],
+                classOf[ScTemplateParents],
+                classOf[ScTry],
+                classOf[ScVariableDefinition],
+              ): _*)
+            ).map {
+              case _: ScArgumentExprList => ARGUMENT
+              case assignment: ScAssignment if isRightAncestor(element, assignment) => EXPRESSION
+              case _: ScBlock => BLOCK
+              case _: ScFile => FILE
+              case functionDefinition: ScFunctionDefinition if isRightAncestor(element, functionDefinition) => EXPRESSION
+              case scFor: ScFor if scFor.body.exists(expr => PsiTreeUtil.isAncestor(expr, element, true)) => EXPRESSION
+              case _: ScFor => FOR
+              case scIf: ScIf if scIf.condition.exists(expr => PsiTreeUtil.isAncestor(expr, element, true)) => IF
+              case _: ScIf => EXPRESSION
+              case infixExpr: ScInfixExpr if isRightAncestor(element, infixExpr) => ARGUMENT
+              case definition: ScPatternDefinition if isRightAncestor(element, definition) => EXPRESSION
+              case _: ScParameterClause => PARAMETER
+              case postfixExpr: ScPostfixExpr if isRightAncestor(element, postfixExpr) => REFERENCE
+              case _: ScTemplateBody => CLASS_BODY
+              case _: ScTemplateParents => CLASS_PARENTS
+              case scTry: ScTry if scTry.finallyBlock.exists(_.expression.exists(expr => PsiTreeUtil.isAncestor(expr, element, true))) => EXPRESSION
+              case scTry: ScTry if scTry.expression.exists(expr => PsiTreeUtil.isAncestor(expr, element, true))  => EXPRESSION
+              case _: ScTry => CATCH
+              case variableDefinition: ScVariableDefinition if isRightAncestor(element, variableDefinition) => EXPRESSION
+              case _ => UNKNOWN
+            }
+        }
+      }
+      .getOrElse(UNKNOWN)
+  }
+
   private[ml] def argumentCount(maybeElement: Option[PsiElement]): Option[Int] = {
     maybeElement.map {
       case function: ScFunction => function.paramClauses.clauses.headOption.filterNot(_.isImplicit).map(_.parameters.size).getOrElse(0)
@@ -154,6 +256,13 @@ package object ml {
         classOf[ScPostfixExpr]
       ).accepts(element)
     }
+  }
+
+  private[ml] def previousKeyword(maybeElement: Option[PsiElement]): Keyword = {
+    maybeElement
+      .flatMap(element => findLeftmostLeaf(element.getNode))
+      .flatMap(node => KeywordsByElementType.get(node.getElementType))
+      .getOrElse(Keyword.UNKNOWN)
   }
 
   private[ml] def isInsideCatch(maybeElement: Option[PsiElement]): Boolean =
@@ -189,16 +298,40 @@ package object ml {
 
   private def findParendIfRightChild(element: PsiElement, parentClasses: Array[Class[_ <: PsiElement]]): Option[PsiElement] = {
     val parent = PsiTreeUtil.getParentOfType(element, parentClasses: _*)
+    Option(parent).filter(isRightAncestor(element, _))
+  }
 
-    @tailrec
-    def isRightAncestor(child: PsiElement, parent: PsiElement): Boolean = {
-      val currentParrent = child.getParent
-      if (currentParrent.getLastChild ne child) false
-      else if (currentParrent eq parent) true
-      else isRightAncestor(currentParrent, parent)
+  @tailrec
+  private def isRightAncestor(child: PsiElement, parent: PsiElement): Boolean = {
+    val currentParrent = child.getParent
+    if (currentParrent.getLastChild ne child) false
+    else if (currentParrent eq parent) true
+    else isRightAncestor(currentParrent, parent)
+  }
+
+  private def findLeftmostLeaf(node: ASTNode, allowWhitespace: Boolean = false): Option[ASTNode] = {
+
+    def suitableLeafNode(candidate: ASTNode): Boolean = {
+      candidate.getLastChildNode == null &&
+        (allowWhitespace || !isWhitespace(candidate)) &&
+        node != candidate
     }
 
-    Option(parent).filter(isRightAncestor(element, _))
+    def findLeafNode(node: ASTNode, checkChilds: Boolean): Option[ASTNode] = {
+      if (node == null) None
+      else if (suitableLeafNode(node)) Some(node)
+      else {
+        (if (checkChilds) findLeafNode(node.getLastChildNode, checkChilds = true) else None) orElse
+          findLeafNode(node.getTreePrev, checkChilds = true) orElse
+          findLeafNode(node.getTreeParent, checkChilds = false)
+      }
+    }
+
+    findLeafNode(node, checkChilds = false)
+  }
+
+  private def isWhitespace(node: ASTNode): Boolean = {
+    node.getElementType == TokenType.WHITE_SPACE || node.getElementType == ScalaTokenTypes.tWHITE_SPACE_IN_LINE
   }
 
   private class TypeNamesExtractor(maxWords: Int) extends ScalaTypeVisitor {
