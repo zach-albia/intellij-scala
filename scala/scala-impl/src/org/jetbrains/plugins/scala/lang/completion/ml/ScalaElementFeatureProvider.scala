@@ -10,9 +10,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.NotNullLazyKey
 import com.intellij.psi.PsiElement
 import org.jetbrains.plugins.scala.lang.completion.lookups.ScalaLookupItem
+import org.jetbrains.plugins.scala.lang.completion.ml.ScalaContextFeatureProvider._
 import org.jetbrains.plugins.scala.lang.completion.ml.ScalaElementFeatureProvider._
 import org.jetbrains.plugins.scala.lang.completion.weighter.ScalaByExpectedTypeWeigher
-import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaPsiElement
 import org.jetbrains.plugins.scala.lang.refactoring.ScalaNamesValidator.isKeyword
 
@@ -22,8 +22,12 @@ final class ScalaElementFeatureProvider extends ElementFeatureProvider {
 
   override def calculateFeatures(element: LookupElement, location: CompletionLocation, contextFeatures: ContextFeatures): util.Map[String, MLFeatureValue] = {
 
-    implicit val position: PsiElement = Position.getValue(location)
+    implicit val position: PsiElement = Position.get(contextFeatures)
     implicit val project: Project = location.getProject
+
+    if (!Position.isIn(location)) {
+      Position.set(location, position)
+    }
 
     val scalaLookupItem = element match {
       case ScalaLookupItem(item, _) => Some(item)
@@ -39,22 +43,31 @@ final class ScalaElementFeatureProvider extends ElementFeatureProvider {
 
     val nameWords = if (calculateWords) extractWords(maybeName) else Array.empty[String]
 
-    val maybeType = scalaLookupItem
-      .filter(_ => calculateWords)
-      .flatMap(item => ScalaByExpectedTypeWeigher.computeType(item.element, item.substitutor))
+    val maybeKeywordName = element.getObject match {
+      case string: String if isKeyword(string) => Some(string)
+      case _ => None
+    }
 
-    val typeWords = extractWords(maybeType)
+    val typeWords = maybeKeywordName match {
+      case _ if !calculateWords => Array.empty[String]
+      case Some(keywordName) if keywordName == ScalaKeyword.TRUE || keywordName == ScalaKeyword.FALSE => Array("boolean")
+      case Some(_) => Array.empty[String]
+      case None =>
+        val maybeType = scalaLookupItem
+          .flatMap(item => ScalaByExpectedTypeWeigher.computeType(item.element, item.substitutor))
 
-    val kind = elementKind(maybeElement).getOrElse {
-      element.getObject match {
-        case string: String if isKeyword(string) => CompletionItem.KEYWORD
-        case _ => CompletionItem.UNKNOWN
-      }
+        extractWords(maybeType)
+    }
+
+    val kind = maybeKeywordName match {
+      case Some(_) => CompletionItem.KEYWORD
+      case _ => elementKind(maybeElement).getOrElse(CompletionItem.UNKNOWN)
     }
 
     val features = new util.HashMap[String, MLFeatureValue](Context.getValue(location))
 
     features.put("kind", MLFeatureValue.categorical(kind))
+    features.put("keyword", MLFeatureValue.categorical(maybeKeywordName.map(keywordByName).getOrElse(Keyword.UNKNOWN)))
     features.put("symbolic", MLFeatureValue.binary(maybeName.exists(isSymbolic)))
     features.put("unary", MLFeatureValue.binary(maybeName.exists(_.startsWith("unary_"))))
     features.put("scala", MLFeatureValue.binary(scalaLookupItem.exists(_.element.isInstanceOf[ScalaPsiElement])))
@@ -71,12 +84,8 @@ final class ScalaElementFeatureProvider extends ElementFeatureProvider {
 
 object ScalaElementFeatureProvider {
 
-  private val Position = NotNullLazyKey.create[PsiElement, CompletionLocation]("scala.feature.element.position", location => {
-    positionFromParameters(location.getCompletionParameters)
-  })
-
   private val ExpectedTypeAndNameWords = NotNullLazyKey.create[(Array[String],  Array[String]), CompletionLocation]("scala.feature.element.expected.type.and.name.words", location => {
-    val position = Position.getValue(location)
+    val position = Position.get(location)
     val expressionOption = definitionByPosition(position, ScalaAfterNewCompletionContributor.isAfterNew(position))
 
     val expectedTypeAndName = expressionOption
@@ -90,7 +99,7 @@ object ScalaElementFeatureProvider {
   })
 
   private val Context = NotNullLazyKey.create[util.HashMap[String, MLFeatureValue], CompletionLocation]("scala.feature.element.context", location => {
-    val position = Position.getValue(location)
+    val position = Position.get(location)
 
     val contextFeatures = new util.HashMap[String, MLFeatureValue]
 

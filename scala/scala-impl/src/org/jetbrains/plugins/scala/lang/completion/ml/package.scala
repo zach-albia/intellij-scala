@@ -76,6 +76,9 @@ package object ml {
     )
   }
 
+  private val KeywordsByName =
+    KeywordsByElementType.map { case (elementType, keyword) => elementType.toString -> keyword }
+
   private[ml] def isSymbolic(name: String): Boolean = name.exists(c => !c.isLetterOrDigit && c != '$')
 
   private[ml] def extractWords(names: Iterable[String], maxWords: Int = MaxWords): Array[String] = {
@@ -257,6 +260,8 @@ package object ml {
       ).accepts(element)
     }
   }
+
+  private[ml] def keywordByName(name: String): Keyword = KeywordsByName.getOrElse(name, Keyword.UNKNOWN)
 
   private[ml] def previousKeyword(maybeElement: Option[PsiElement]): Keyword = {
     maybeElement
