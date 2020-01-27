@@ -6,13 +6,11 @@ import com.intellij.codeInsight.completion.ml.{CompletionEnvironment, ContextFea
 import com.intellij.codeInsight.completion.{CodeCompletionHandlerBase, CompletionType}
 import org.jetbrains.plugins.scala.ScalaLanguage
 import org.jetbrains.plugins.scala.base.ScalaLightCodeInsightFixtureTestAdapter
-import org.junit.Test
 
 class ScalaContextFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAdapter {
 
-  @Test
   def testLocation(): Unit = {
-    import org.jetbrains.plugins.scala.lang.completion.ml.Location._
+    import Location._
 
     assertFeature("location", MLFeatureValue.categorical(CLASS_BODY))(
       """object X {
@@ -238,9 +236,8 @@ class ScalaContextFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testPreviousKeyword(): Unit = {
-    import org.jetbrains.plugins.scala.lang.completion.ml.Keyword._
+    import Keyword._
 
     assertFeature("previous_keyword", MLFeatureValue.categorical(PRIVATE))(
       """trait X {

@@ -9,13 +9,11 @@ import com.intellij.psi.PsiNamedElement
 import org.jetbrains.plugins.scala.ScalaLanguage
 import org.jetbrains.plugins.scala.base.ScalaLightCodeInsightFixtureTestAdapter
 import org.jetbrains.plugins.scala.extensions._
-import org.junit.Test
 
 import scala.collection.mutable
 
 class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAdapter {
 
-  @Test
   def testPostfix(): Unit = {
 
     assertContext("postfix", MLFeatureValue.binary(true))(
@@ -35,7 +33,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testInsideCatch(): Unit = {
 
     assertContext("inside_catch", MLFeatureValue.binary(true))(
@@ -55,7 +52,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testTypeExpected(): Unit = {
     assertContext("type_expected", MLFeatureValue.binary(true))(
       """object X {
@@ -128,7 +124,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testAfterNew(): Unit = {
     assertContext("after_new", MLFeatureValue.binary(true))(
       """object X {
@@ -145,9 +140,8 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testKind(): Unit = {
-    import org.jetbrains.plugins.scala.lang.completion.ml.CompletionItem._
+    import CompletionItem._
 
     assertElement("kind", "type", MLFeatureValue.categorical(KEYWORD))(
       """object X {
@@ -229,9 +223,8 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testKeyword(): Unit = {
-    import org.jetbrains.plugins.scala.lang.completion.ml.Keyword._
+    import Keyword._
 
     assertElement("keyword", "import", MLFeatureValue.categorical(IMPORT))(
       """<caret>
@@ -327,7 +320,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testSymbolic(): Unit = {
     assertElement("symbolic", "+", MLFeatureValue.binary(true))(
       """object X {
@@ -351,7 +343,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testUnary(): Unit = {
     assertElement("unary", "unary_+", MLFeatureValue.binary(true))(
       """object X {
@@ -368,7 +359,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testScala(): Unit = {
 
     assertElement("scala", "List", MLFeatureValue.binary(true))(
@@ -386,7 +376,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testJavaObjectMethod(): Unit = {
 
     assertElement("java_object_method", "equals", MLFeatureValue.binary(true))(
@@ -411,7 +400,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testArgumentCount(): Unit = {
 
     assertElement("argument_count", "Nil", MLFeatureValue.float(-1.0))(
@@ -453,7 +441,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testNameNameDist(): Unit = {
 
     assertElement("name_name_sim", "List", MLFeatureValue.float(-1.0))(
@@ -517,7 +504,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
 //    )
   }
 
-  @Test
   def testNameTypeDist(): Unit = {
 
     assertElement("name_type_sim", "Array", MLFeatureValue.float(-1.0))(
@@ -558,7 +544,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
     )
   }
 
-  @Test
   def testTypeNameDist(): Unit = {
 
     assertElement("type_name_sim", "Array", MLFeatureValue.float(-1.0))(
@@ -594,7 +579,6 @@ class ScalaElementFeatureProviderTest extends ScalaLightCodeInsightFixtureTestAd
 //    )
   }
 
-  @Test
   def testTypeTypeDist(): Unit = {
 
     assertElement("type_type_sim", "integer", MLFeatureValue.float(-1.0))(

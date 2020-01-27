@@ -192,29 +192,29 @@ package object ml {
     import Location._
 
     maybeElement
-      .flatMap { element =>
+      .map { element =>
         element.getParent match {
-          case reference: ScReferenceExpression if reference.isQualified => Some(REFERENCE)
+          case reference: ScReferenceExpression if reference.isQualified => REFERENCE
           case _ =>
-            Option(
-              PsiTreeUtil.getParentOfType(element, Array(
-                classOf[ScArgumentExprList],
-                classOf[ScAssignment],
-                classOf[ScBlock],
-                classOf[ScFile],
-                classOf[ScFunctionDefinition],
-                classOf[ScFor],
-                classOf[ScIf],
-                classOf[ScInfixExpr],
-                classOf[ScPatternDefinition],
-                classOf[ScParameterClause],
-                classOf[ScPostfixExpr],
-                classOf[ScTemplateBody],
-                classOf[ScTemplateParents],
-                classOf[ScTry],
-                classOf[ScVariableDefinition],
-              ): _*)
-            ).map {
+            val parentsOfInterest = Array(
+              classOf[ScArgumentExprList],
+              classOf[ScAssignment],
+              classOf[ScBlock],
+              classOf[ScFile],
+              classOf[ScFunctionDefinition],
+              classOf[ScFor],
+              classOf[ScIf],
+              classOf[ScInfixExpr],
+              classOf[ScPatternDefinition],
+              classOf[ScParameterClause],
+              classOf[ScPostfixExpr],
+              classOf[ScTemplateBody],
+              classOf[ScTemplateParents],
+              classOf[ScTry],
+              classOf[ScVariableDefinition],
+            )
+
+            PsiTreeUtil.getParentOfType(element, parentsOfInterest: _*) match {
               case _: ScArgumentExprList => ARGUMENT
               case assignment: ScAssignment if isRightAncestor(element, assignment) => EXPRESSION
               case _: ScBlock => BLOCK
@@ -336,7 +336,10 @@ package object ml {
   }
 
   private def isWhitespace(node: ASTNode): Boolean = {
-    node.getElementType == TokenType.WHITE_SPACE || node.getElementType == ScalaTokenTypes.tWHITE_SPACE_IN_LINE
+    node.getElementType match {
+      case TokenType.WHITE_SPACE | ScalaTokenTypes.tWHITE_SPACE_IN_LINE => true
+      case _ => false
+    }
   }
 
   private class TypeNamesExtractor(maxWords: Int) extends ScalaTypeVisitor {
