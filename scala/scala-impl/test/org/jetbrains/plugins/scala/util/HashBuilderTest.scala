@@ -26,4 +26,6 @@ class HashBuilderTest extends TestCase  {
 
   private def assertEqual(builder: HashBuilder, value: Int): Unit =
     assert((builder: Int) == value)
+
+  private def computeHashCode : Int = 1 #+ "2" #+ "3"
 }
