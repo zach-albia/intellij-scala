@@ -5,11 +5,13 @@ import org.junit.Assert
 
 private[ml] object AssertFeatureValues {
 
+  private val FloatPattern = """FloatValue\(value=([-\d.]+)\)""".r
+
   def equals(expected: MLFeatureValue, actual: MLFeatureValue): Unit = {
     // no equals impl for MLFeatureValue
-    def adapter(value: MLFeatureValue): Any = {
-      val actualValue = Option(value.asBinary()) orElse Option(value.asCategorical()) orElse Option(value.asFloat())
-      actualValue.get
+    def adapter(value: MLFeatureValue): Any = value.toString match {
+      case FloatPattern(doubleValue) => doubleValue.toDouble
+      case notFloat => notFloat
     }
 
     val adaptedExpected = adapter(expected)
