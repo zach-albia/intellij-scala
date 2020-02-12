@@ -64,7 +64,7 @@ class ScalaUnusedSymbolInspection extends HighlightingPassInspection {
       case _ => Seq.empty
     }
     elements.flatMap {
-      case named: ScNamedElement =>
+      case named: ScNamedElement if named.isPhysical =>
         if (!isElementUsed(named, isOnTheFly)) {
           Seq(ProblemInfo(named.nameId, ScalaUnusedSymbolInspection.Annotation, ProblemHighlightType.LIKE_UNUSED_SYMBOL, Seq(new DeleteUnusedElementFix(named))))
         } else Seq.empty
