@@ -10,6 +10,7 @@ import org.jetbrains.plugins.scala.codeInspection.unusedInspections.ScalaUnusedS
 import org.jetbrains.plugins.scala.extensions._
 import org.jetbrains.plugins.scala.lang.completion.ScalaKeyword
 import org.jetbrains.plugins.scala.lang.lexer.ScalaModifier
+import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil.{isLocalOrPrivate, superValsSignatures}
 import org.jetbrains.plugins.scala.lang.psi.api.base.ScMethodLike
 import org.jetbrains.plugins.scala.lang.psi.api.base.patterns.ScCaseClause
@@ -44,27 +45,14 @@ class ScalaUnusedSymbolInspection extends HighlightingPassInspection {
 
   override def invoke(element: PsiElement, isOnTheFly: Boolean): Seq[ProblemInfo] = if (!shouldProcessElement(element)) Seq.empty else {
     val elements: Seq[PsiElement] = element match {
-      case fun: ScFunctionExpr => fun.parameters.filterNot(p => p.isWildcard || p.isImplicitParameter)
-      case fun: ScMethodLike =>
-        val funIsPublic = !fun.containingClass.toOption.exists(isLocalOrPrivate)
-        def nonPrivateClassMemberParam(param: ScParameter): Boolean =
-          funIsPublic && param.asOptionOf[ScClassParameter].exists(p => p.isClassMember && (!p.isPrivate))
-        def overridingParam(param: ScParameter): Boolean =
-          param.asOptionOf[ScClassParameter].exists(isOverridingParameter)
-        isLocalOrPrivate(fun).option(fun) ++: (
-          fun.parameters
-            .filterNot(_.isWildcard)
-            .filter(_.isPhysical)   // context bound are desugared into parameters, for example
-            .filterNot(nonPrivateClassMemberParam)
-            .filterNot(overridingParam)
-        )
       case caseClause: ScCaseClause => caseClause.pattern.toSeq.flatMap(_.bindings).filterNot(_.isWildcard)
       case declaredHolder: ScDeclaredElementsHolder => declaredHolder.declaredElements
+      case fun: ScFunctionExpr => fun.parameters.filterNot(p => p.isWildcard || p.isImplicitParameter)
       case enumerators: ScEnumerators => enumerators.patterns.flatMap(_.bindings).filterNot(_.isWildcard) //for statement
       case _ => Seq.empty
     }
     elements.flatMap {
-      case named: ScNamedElement if named.isPhysical =>
+      case named: ScNamedElement =>
         if (!isElementUsed(named, isOnTheFly)) {
           Seq(ProblemInfo(named.nameId, ScalaUnusedSymbolInspection.Annotation, ProblemHighlightType.LIKE_UNUSED_SYMBOL, Seq(new DeleteUnusedElementFix(named))))
         } else Seq.empty
@@ -73,12 +61,9 @@ class ScalaUnusedSymbolInspection extends HighlightingPassInspection {
   }
 
   override def shouldProcessElement(elem: PsiElement): Boolean = elem match {
+    case f: ScFunction if f.isSpecial => false
     case m: ScMember if m.hasModifierProperty(ScalaKeyword.IMPLICIT) => false
-    case _: ScFunctionDeclaration => false
-    case fd: ScFunctionDefinition if ScalaMainMethodUtil.isMainMethod(fd) => false
-    case f: ScFunction if f.isSpecial || isOverridingFunction(f) => false
-    case _: ScMethodLike => true // handle in invoke
-    case _ => isLocalOrPrivate(elem)
+    case _ => ScalaPsiUtil.isLocalOrPrivate(elem)
   }
 }
 
