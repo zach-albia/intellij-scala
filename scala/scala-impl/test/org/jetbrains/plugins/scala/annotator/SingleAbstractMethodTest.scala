@@ -883,4 +883,22 @@ class SingleAbstractMethodTest_2_11 extends SingleAbstractMethodTestBase {
 
     checkCodeHasNoErrors(code, Some(javaCode))
   }
+
+  def testSCL17054(): Unit = checkCodeHasNoErrors(
+    """
+      |class Action[T]
+      |trait Callable[T] {
+      |  def call(): T
+      |}
+      |
+      |def nonBlocking[T](task: Callable[T]): Action[T] =
+      |  new Action[T]
+      |
+      |val action = nonBlocking(() => "") // should be Action[String]
+      |
+      |def foo[T](action: Action[T]) = action.toString
+      |
+      |foo[String](action)
+      |""".stripMargin
+  )
 }

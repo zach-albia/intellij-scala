@@ -479,13 +479,27 @@ object InferUtil {
 
     // See SCL-3052, SCL-3058
     // This corresponds to use of `isCompatible` in `Infer#methTypeArgs` in scalac, where `isCompatible` uses `weak_<:<`
-    val s: ScSubstitutor = if (shouldUndefineParameters) ScSubstitutor.bind(typeParams)(UndefinedType(_)) else ScSubstitutor.empty
-    val abstractSubst = ScTypePolymorphicType(retType, typeParams).abstractTypeSubstitutor
-    val paramsWithUndefTypes = params.map(p => p.copy(paramType = s(p.paramType),
-      expectedType = abstractSubst(p.paramType), defaultType = p.defaultType.map(s)))
-    val conformanceResult@ConformanceExtResult(problems, constraints, _, _) =
-      Compatibility.checkConformanceExt(checkNames = true, paramsWithUndefTypes, exprs, checkWithImplicits = true,
-      isShapesResolve = false)
+    val s: ScSubstitutor =
+    if (shouldUndefineParameters) ScSubstitutor.bind(typeParams)(UndefinedType(_))
+    else                          ScSubstitutor.empty
+
+    val paramsWithUndefTypes = params.map(
+      p =>
+        p.copy(
+          paramType    = s(p.paramType),
+          expectedType = s(p.paramType),
+          defaultType  = p.defaultType.map(s)
+        )
+    )
+
+    val conformanceResult @ ConformanceExtResult(problems, constraints, _, _) =
+      Compatibility.checkConformanceExt(
+        checkNames = true,
+        paramsWithUndefTypes,
+        exprs,
+        checkWithImplicits = true,
+        isShapesResolve    = false
+      )
 
     val tpe = if (problems.isEmpty) {
       constraints.substitutionBounds(canThrowSCE) match {

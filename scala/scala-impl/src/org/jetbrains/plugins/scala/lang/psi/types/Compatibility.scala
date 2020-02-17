@@ -131,18 +131,33 @@ object Compatibility {
       checkResolve:   Boolean = true
     ): Option[ExpressionTypeResult] = {
       def checkForSAM(etaExpansionHappened: Boolean = false): Option[ExpressionTypeResult] = {
-        def expectedResult = Some(ExpressionTypeResult(Right(pt)))
+        def expectedResult(subst: ScSubstitutor): ScExpression.ExpressionTypeResult =
+          ExpressionTypeResult(Right(subst(pt)))
+
+        def conformanceSubst(tpe: ScType, methodType: ScType): Option[ScSubstitutor] = {
+          val conformance = tpe.conforms(methodType, ConstraintSystem.empty)
+
+          if (conformance.isLeft) None
+          else
+            conformance.constraints
+              .substitutionBounds(canThrowSCE = false)
+              .map(_.substitutor)
+        }
 
         tp match {
           case FunctionType(_, params) if place.isSAMEnabled =>
             SAMUtil.toSAMType(pt, place) match {
-              case Some(methodType) if tp.conforms(methodType) => expectedResult
-              case Some(methodType @ FunctionType(retTp, _))
-                  if etaExpansionHappened && retTp.isUnit =>
-                val newTp = FunctionType(Unit, params)
+              case Some(methodType @ FunctionType(retTpe, _)) =>
+                val maybeSubst = conformanceSubst(tp, methodType)
 
-                if (newTp.conforms(methodType)) expectedResult
-                else None
+                maybeSubst match  {
+                  case Some(subst) => Option(expectedResult(subst))
+                  case None if etaExpansionHappened && retTpe.isUnit =>
+                    val newTp = FunctionType(Unit, params)
+                    val newSubst = conformanceSubst(newTp, methodType)
+                    newSubst.map(expectedResult)
+                  case _ => None
+                }
               case _ => None
             }
           case _ => None
