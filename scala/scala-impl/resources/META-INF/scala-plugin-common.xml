@@ -703,7 +703,7 @@
                          displayName="Loop variable not updated inside loop" groupPath="Scala" groupName="General" shortName="LoopVariableNotUpdated" id="LoopVariableNotUpdatedInspection" level="WARNING"
                          enabledByDefault="true" language="Scala"/>
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.ScalaFileNameInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="fileName.does.not.match"
                          groupPath="Scala" groupName="General"
                          shortName="ScalaFileName"
@@ -857,14 +857,14 @@
                          shortName="MatchToPartialFunction" level="WARNING"
                          enabledByDefault="true" language="Scala"/>
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.controlFlow.ScalaUnreachableCodeInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="unreachable.code.name"
                          groupPath="Scala" groupName="General"
                          shortName="ScalaUnreachableCode"
                          language="Scala" level="WARNING"
                          enabledByDefault="true"/>
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.controlFlow.ScalaUnusedExpressionInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="unused.expression.name"
                          groupPath="Scala" groupName="General"
                          shortName="ScalaUnusedExpression"
@@ -904,12 +904,12 @@
                          language="Scala" groupPath="Scala" groupName="Internal"
                          isInternal="true" level="WARNING" enabledByDefault="true"/>
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.internal.ScalaShouldBeTextContainsInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="internal.getText.contains.shouldBe.textContains"
                          language="Scala" groupPath="Scala" groupName="Internal"
                          isInternal="true" level="WARNING" enabledByDefault="true" />
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.internal.ScalaShouldBeTextMatchesInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="internal.getText.equals.shouldBe.textMatches"
                          language="Scala" groupPath="Scala" groupName="Internal"
                          isInternal="true" level="WARNING" enabledByDefault="true" />
@@ -966,7 +966,7 @@
         <!--Method signature inspections-->
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.AccessorLikeMethodInspection$EmptyParentheses"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.accessor.empty.parenthesis"
                 groupPath="Scala" groupName="Method signature"
                 shortName="AccessorLikeMethodIsEmptyParen"
@@ -974,7 +974,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.AccessorLikeMethodInspection$UnitReturnType"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.accessor.unit.return.type"
                 groupPath="Scala" groupName="Method signature"
                 shortName="AccessorLikeMethodIsUnit"
@@ -982,7 +982,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ParameterlessOverrideInspection$EmptyParenMethod"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.parameterless.override.empty.paren"
                 displayName="Empty-paren Scala method overridden as parameterless"
                 groupPath="Scala" groupName="Method signature"
@@ -991,7 +991,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ParameterlessOverrideInspection$JavaMutator"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.parameterless.override.java.mutator"
                 groupPath="Scala" groupName="Method signature"
                 shortName="JavaMutatorMethodOverriddenAsParameterless"
@@ -999,7 +999,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ParameterlessOverrideInspection$MutatorLikeMethod"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.parameterless.override.mutator.like"
                 groupPath="Scala" groupName="Method signature"
                 shortName="MutatorLikeMethodIsParameterless"
@@ -1007,7 +1007,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.OverrideAbstractMemberInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.override.abstract.member"
                 groupPath="Scala" groupName="Method signature"
                 shortName="OverrideAbstractMember"
@@ -1015,7 +1015,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.EmptyParenOverrideInspection$JavaAccessorMethodOverriddenAsEmptyParenInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.empty.paren.override.java.accessor"
                 groupPath="Scala" groupName="Method signature"
                 shortName="JavaAccessorMethodOverriddenAsEmptyParen"
@@ -1023,7 +1023,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.EmptyParenOverrideInspection$ParameterlessMemberOverriddenAsEmptyParenInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.empty.paren.override.parameterless"
                 groupPath="Scala" groupName="Method signature"
                 shortName="ParameterlessMemberOverriddenAsEmptyParen"
@@ -1031,7 +1031,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ParameterlessAccessInspection$JavaMutator"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.parameterless.access.java.mutator"
                 groupPath="Scala" groupName="Method signature"
                 shortName="JavaMutatorMethodAccessedAsParameterless"
@@ -1039,7 +1039,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ParameterlessAccessInspection$EmptyParenMethod"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.parameterless.access.empty.paren"
                 groupPath="Scala" groupName="Method signature"
                 shortName="EmptyParenMethodAccessedAsParameterless"
@@ -1047,7 +1047,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$ExplicitType"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.unit.explicit.type"
                 groupPath="Scala" groupName="Method signature"
                 shortName="UnitMethodDeclaredWithTypeAnnotation"
@@ -1055,7 +1055,7 @@
                 enabledByDefault="false"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$FunctionDefinition"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.unit.functional.definition"
                 groupPath="Scala" groupName="Method signature"
                 shortName="UnitMethodDefinedLikeFunction"
@@ -1063,7 +1063,7 @@
                 enabledByDefault="false"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$ExplicitAssignment"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.unit.explicit.assignment"
                 groupPath="Scala" groupName="Method signature"
                 shortName="UnitMethodDefinedWithEqualsSign"
@@ -1071,7 +1071,7 @@
                 enabledByDefault="false"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$Parameterless"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.unit.parameterless"
                 groupPath="Scala" groupName="Method signature"
                 shortName="UnitMethodIsParameterless"
@@ -1079,7 +1079,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$ProcedureDefinition"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.procedure.definition"
                 groupPath="Scala" groupName="Method signature"
                 shortName="ProcedureDefinition"
@@ -1087,7 +1087,7 @@
                 enabledByDefault="false" language="Scala"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.UnitMethodInspection$ProcedureDeclaration"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.procedure.declaration"
                 groupPath="Scala" groupName="Method signature"
                 shortName="ProcedureDeclaration"
@@ -1095,7 +1095,7 @@
                 enabledByDefault="false"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.JavaAccessorEmptyParenCallInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.java.accessor.empty.paren"
                 groupPath="Scala" groupName="Method signature"
                 shortName="JavaAccessorEmptyParenCall"
@@ -1103,7 +1103,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.methodSignature.ApparentResultTypeRefinementInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="method.signature.result.type.refinement"
                 groupPath="Scala" groupName="Method signature"
                 shortName="ApparentResultTypeRefinement"
@@ -1111,7 +1111,7 @@
                 enabledByDefault="true"/>
         <localInspection
                 implementationClass="org.jetbrains.plugins.scala.codeInspection.parameters.TypedParameterWithoutParenthesisInspection"
-                bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                bundle="messages.ScalaInspectionBundle"
                 key="typed.parameter.without.parenthesis.in.function.literal"
                 groupPath="Scala" groupName="Method signature"
                 shortName="TypedParameterWithoutParen"
@@ -1385,7 +1385,7 @@
 
         <!-- resource leak inspections -->
         <localInspection implementationClass="org.jetbrains.plugins.scala.codeInspection.resourceLeaks.SourceNotClosedInspection"
-                         bundle="org.jetbrains.plugins.scala.codeInspection.InspectionBundle"
+                         bundle="messages.ScalaInspectionBundle"
                          key="source.not.closed"
                          groupPath="Scala"
                          groupName="Resource leaks"
